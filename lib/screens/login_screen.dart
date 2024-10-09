@@ -1,6 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'template_screen.dart';
+import 'package:http/http.dart' as http;
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -8,9 +10,10 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  bool _rememberMe = false;
   bool _loginFail = false;
   String _email = "";
+  bool _isLoading = false;
+  Map<String, dynamic> _clubData = {};
 
   @override
   void initState() {
@@ -18,54 +21,94 @@ class _LoginScreenState extends State<LoginScreen> {
     _checkLoginStatus();
   }
 
+  Future<void> _fetchClubData(String email) async {
+    setState(() {
+      _isLoading = true; // Set loading state to true
+    });
+
+    try {
+      final response = await http.get(Uri.parse(
+          'https://sportal-backend.onrender.com/get-club-info/$email'));
+
+      print(response.toString());
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _clubData = jsonDecode(response.body);
+        });
+        _saveEmail();
+        Navigator.pushNamed(
+          context,
+          '/template',
+          arguments: {
+            'email': _email,
+            'clubData': _clubData,
+          },
+        );
+      } else {
+        setState(() {
+          _loginFail = true;
+        });
+      }
+    } finally {
+      setState(() {
+        _isLoading = false; // Reset loading state
+      });
+    }
+  }
+
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedEmail = prefs.getString('email');
-    
+
     if (savedEmail != null) {
-      Navigator.pushReplacementNamed(
-        context,
-        '/template',
-        arguments: savedEmail,
-      );
+      _fetchClubData(savedEmail);
     }
   }
 
   Future<void> _saveEmail() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString('email', _email);
+    String? savedEmail = prefs.getString('email');
+    if (savedEmail == null) {
+      await prefs.setString('email', _email);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color.fromRGBO(249, 253, 254, 1),
-      resizeToAvoidBottomInset: true, // Ensure that the screen resizes when the keyboard opens
-      body: SingleChildScrollView(
-        reverse: true,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 100),
-              _buildHeader(),
-              const SizedBox(height: 350),
-              _buildTextField(
-                label: "Email",
-                hintText: "",
-                onChanged: (value) {
-                  _email = value;
-                },
+      resizeToAvoidBottomInset:
+          true, // Ensure that the screen resizes when the keyboard opens
+      body: _isLoading // Show loading indicator
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              reverse: true,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 100),
+                    _buildHeader(),
+                    const SizedBox(height: 350),
+                    _buildTextField(
+                      label: "Email",
+                      hintText: "",
+                      onChanged: (value) {
+                        _email = value;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    if (_loginFail) _buildLoginFailNotification(),
+                    _buildLoginButton(),
+                    const SizedBox(
+                      height: 5,
+                    )
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              if (_loginFail) _buildLoginFailNotification(),
-              _buildLoginButton(),
-              const SizedBox(height: 5,)
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 
@@ -157,12 +200,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return ElevatedButton(
       onPressed: () async {
         if (_email.isNotEmpty) {
-          await _saveEmail();
-          Navigator.pushNamed(
-            context,
-            '/template',
-            arguments: _email,
-          );
+          await _fetchClubData(_email);
         } else {
           setState(() {
             _loginFail = true;

@@ -51,7 +51,7 @@ class ImageBottomSheet extends StatelessWidget {
               style: TextStyle(
                   fontSize: 16,
                   color: Colors.white,
-                  fontWeight: FontWeight.w300),
+                  fontWeight: FontWeight.w500),
             ),
           ),
           const SizedBox(

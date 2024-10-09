@@ -11,22 +11,29 @@ class Routes {
       case '/login':
         return MaterialPageRoute(builder: (_) => LoginScreen());
       case '/template':
-        // Ensure the email is passed via settings.arguments
-        final email = settings.arguments as String?;
-        if (email != null) {
-          return MaterialPageRoute(builder: (_) => TemplateScreen(email: email));
+        // Ensure the arguments are passed via settings.arguments
+        final arguments = settings.arguments as Map<String, dynamic>?;
+        if (arguments != null) {
+          final email = arguments['email'] as String;
+          final clubData = arguments['clubData'] as Map<String, dynamic>;
+
+            return MaterialPageRoute(
+              builder: (_) => TemplateScreen(email: email, clubData: clubData),
+            );
+          
         } else {
           return MaterialPageRoute(
             builder: (_) => Scaffold(
-              body: Center(child: Text('Email argument is missing for ${settings.name}')),
+              body: Center(child: Text('Arguments are missing for ${settings.name}')),
             ),
           );
         }
       default:
         return MaterialPageRoute(
-            builder: (_) => Scaffold(
-                  body: Center(child: Text('No route defined for ${settings.name}')),
-                ));
+          builder: (_) => Scaffold(
+            body: Center(child: Text('No route defined for ${settings.name}')),
+          ),
+        );
     }
   }
 }

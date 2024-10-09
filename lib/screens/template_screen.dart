@@ -22,6 +22,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
   String? _selectedTeam;
   String? _selectedFixture;
 
+  String? _clubLogo;
+
   List<String> _associations = [];
   List<String> _competitions = [];
   List<String> _seasons = [];
@@ -68,6 +70,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
           if (_associations.isNotEmpty) {
             _updateCompetitions(_associations.first);
           }
+
+          _clubLogo = _clubData['clubLogo'];
+
         });
       } else {
         // Handle error and show a message
@@ -83,7 +88,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
   }
 
   void _updateCompetitions(String selectedAssociation) {
-    print("CHECK 0");
     setState(() {
       final association = _clubData['association'].firstWhere(
           (assoc) => assoc['associationName'] == selectedAssociation);
@@ -199,14 +203,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
         .firstWhere((fixture) =>
             true); // No need for condition since we've filtered above
 
-    // Print the selected fixture with the additional parameters
-    print(selectedFixture);
-
     try {
-      print("DEBUGGER");
-      print(_selectedAssociation);
-      print((_clubData['association'] as List).firstWhere((assoc) =>
-          assoc['associationName'] == _selectedAssociation)['associationLogo']);
       final response = await http.post(
         Uri.parse(
             'https://sportal-backend.onrender.com/generate-gameday-image'),
@@ -248,9 +245,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
             );
           },
         );
-      } else {
-        print('Failed to generate image');
-      }
+      } else {}
     } catch (e) {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -265,50 +260,66 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    print("SELECTED FIXTURE: $_selectedFixture");
     return Scaffold(
       backgroundColor: const Color.fromRGBO(249, 253, 254, 1),
       body: _isLoading // Show loading indicator
           ? const Center(child: CircularProgressIndicator())
-          : Column(
+          : SingleChildScrollView(child:  Column(
               children: [
                 Container(
-                    padding: const EdgeInsets.all(10.0), // Add padding
-                    width: double.infinity, // Make the box full width
-                    decoration: const BoxDecoration(
-                      color: Color.fromRGBO(
-                          60, 17, 185, 1), // Purple background color
-                      borderRadius: BorderRadius.only(
-                        bottomLeft: Radius.circular(
-                            15), // Rounded corners at the bottom
-                        bottomRight: Radius.circular(15),
-                      ),
+                  padding: const EdgeInsets.symmetric(horizontal:  40.0, vertical: 15), // Add padding
+                  width: double.infinity, 
+                  height: 150,// Make the box full width
+                  decoration: const BoxDecoration(
+                    color: Color.fromRGBO(
+                        60, 17, 185, 1), // Purple background color
+                    borderRadius: BorderRadius.only(
+                      bottomLeft:
+                          Radius.circular(30), // Rounded corners at the bottom
+                      bottomRight: Radius.circular(30),
                     ),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 30,),
-                        Text(
-                          'Hello',
-                          style: TextStyle(
-                            color: Colors.white, // White text color
-                            fontSize: 20.0, // Font size
-                            fontWeight: FontWeight.bold, // Bold text
+                  ),
+                  child: Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween, // Align text and image
+                    children: [
+                      // Column for text, aligned to the left
+                      const Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start, // Align text to the left
+                        children: [
+                          SizedBox(height: 30),
+                          Text(
+                            'Hello',
+                            style: TextStyle(
+                              color: Colors.white, // White text color
+                              fontSize: 30.0, // Font size
+                              fontWeight: FontWeight.bold, // Bold text
+                            ),
                           ),
-                        ),
-                        Text(
-                          "Welcome to Sportal",
-                          style: TextStyle(
-                            color: Colors.white, // White text color
-                            fontSize: 10.0, // Font size
-                            fontWeight: FontWeight.bold, // Bold text
+                          Text(
+                            "Welcome to Sportal",
+                            style: TextStyle(
+                              color: Color.fromRGBO(255, 255, 255,
+                                  0.4), // White text with opacity
+                              fontSize: 15.0, // Font size
+                              fontWeight: FontWeight.bold, // Bold text
+                            ),
                           ),
-                        )
-                      ],
-                    )),
+                        ],
+                      ),
+                      // Circular image on the right
+                      CircleAvatar(
+                        radius: 30.0, // Adjust the size of the circular image
+                        backgroundImage: NetworkImage(
+                            _clubLogo ?? ''), // Replace with the actual image URL
+                      ),
+                    ],
+                  ),
+                ),
                 Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: SingleChildScrollView(
-                    child: Column(
+                  child: Column(
                       children: [
                         ...dropdownLabel("Template"),
                         DropdownButtonFormField<String>(
@@ -439,7 +450,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
                         ElevatedButton(
                           onPressed: _generateImage,
                           style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 90, vertical: 10),
                             backgroundColor:
                                 const Color.fromRGBO(60, 17, 185, 1),
                             shape: RoundedRectangleBorder(
@@ -456,10 +468,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
                         ),
                       ],
                     ),
-                  ),
+                  
                 )
               ],
-            ),
+            )),
     );
   }
 }

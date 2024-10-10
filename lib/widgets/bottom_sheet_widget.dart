@@ -16,58 +16,60 @@ class ImageBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 500,
-      width: MediaQuery.of(context).size.width,
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(24.0),
+    return SafeArea(
+      child: Container(
+        // Set dynamic height based on screen size, reducing the chance of overflow
+        height: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
+        width: MediaQuery.of(context).size.width,
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(24.0),
+          ),
         ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Expanded(
-            child: Image.memory(
-              imageBytes,
-              fit: BoxFit.contain,
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              await _shareImage(
-                  imageBytes); // Call the method to share the image
-            },
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 10),
-              backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Wrapping the image in a Flexible widget to avoid overflow
+            Flexible(
+              child: Image.memory(
+                imageBytes,
+                fit: BoxFit.contain, // Ensures the image fits within the bounds
               ),
             ),
-            child: const Text(
-              'Share',
-              style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  fontWeight: FontWeight.w500),
-            ),
-          ),
-          const SizedBox(
-            height: 5,
-          ),
-          TextButton(
-            onPressed: onRedesign,
-            child: const Text(
-              'Re-design',
-              style: TextStyle(
-                color: Color.fromRGBO(107, 78, 255, 1), // Specific color
-                fontSize: 16, // Adjust font size if needed
+            const SizedBox(height: 25,),
+            ElevatedButton(
+              onPressed: () async {
+                await _shareImage(imageBytes); // Call the method to share the image
+              },
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 10),
+                backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(100),
+                ),
+              ),
+              child: const Text(
+                'Share',
+                style: TextStyle(
+                    fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500),
               ),
             ),
-          )
-        ],
+            const SizedBox(height: 5),
+            TextButton(
+              onPressed: onRedesign,
+              child: const Text(
+                'Re-design',
+                style: TextStyle(
+                  color: Color.fromRGBO(107, 78, 255, 1), // Specific color
+                  fontSize: 16, // Adjust font size if needed
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+          ],
+        ),
       ),
     );
   }

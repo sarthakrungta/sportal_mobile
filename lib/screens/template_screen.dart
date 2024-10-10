@@ -201,7 +201,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
           'teamA': selectedFixture['teamA'],
           'teamB': selectedFixture['teamB'],
           'gameDate': selectedFixture['fixtureDate'],
-          "seasonName": _selectedSeason ?? "",
+          "competitionName": _selectedCompetition ?? "",
           "teamALogoUrl": selectedFixture['teamALogo'] ??
               "https://pngfre.com/wp-content/uploads/Cricket-14-1.png", // New parameter
           "teamBLogoUrl": selectedFixture['teamBLogo'] ??
@@ -245,242 +245,244 @@ class _TemplateScreenState extends State<TemplateScreen> {
   }
 
   void _showErrorMessage(String message) {
+    MediaQuery.paddingOf(context).top;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
   }
 
+  
+
   @override
   Widget build(BuildContext context) {
+    final safeAreaPadding = MediaQuery.paddingOf(context).top;
+    print("TOP APP BAR HEIGHT: ");
+    print(safeAreaPadding);
     return Scaffold(
-      backgroundColor: const Color.fromRGBO(249, 253, 254, 1),
-      body: SingleChildScrollView(
+        backgroundColor: const Color.fromRGBO(249, 253, 254, 1),
+        body: SingleChildScrollView(
           child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: 40.0, vertical: 15), // Add padding
-            width: double.infinity,
-            height: 150, // Make the box full width
-            decoration: const BoxDecoration(
-              color: Color.fromRGBO(60, 17, 185, 1), // Purple background color
-              borderRadius: BorderRadius.only(
-                bottomLeft:
-                    Radius.circular(30), // Rounded corners at the bottom
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment:
-                  MainAxisAlignment.spaceBetween, // Align text and image
-              children: [
-                // Column for text, aligned to the left
-                const Column(
-                  crossAxisAlignment:
-                      CrossAxisAlignment.start, // Align text to the left
+            children: [
+              Container(
+                padding: EdgeInsets.only(
+                    right: 40.0, left: 40.0, top: safeAreaPadding),
+                width: double.infinity,
+                height: 150,
+                decoration: const BoxDecoration(
+                  color:
+                      Color.fromRGBO(60, 17, 185, 1), 
+                  borderRadius: BorderRadius.only(
+                    bottomLeft:
+                        Radius.circular(30), 
+                    bottomRight: Radius.circular(30),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment:
+                      MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(height: 30),
-                    Text(
-                      'Hello',
-                      style: TextStyle(
-                        color: Colors.white, // White text color
-                        fontSize: 30.0, // Font size
-                        fontWeight: FontWeight.bold, // Bold text
+                    const Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 30), // Adjust space here as needed
+                        Text(
+                          'Hello',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          "Welcome to Sportal",
+                          style: TextStyle(
+                            color: Color.fromRGBO(255, 255, 255, 0.4),
+                            fontSize: 15.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    CircleAvatar(
+                      radius: 30.0,
+                      backgroundImage: NetworkImage(
+                          _clubLogo ?? ''), // Replace with the actual image URL
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    ...dropdownLabel("Template"),
+                    DropdownButtonFormField<String>(
+                      value: _selectedTemplate,
+                      items: ['Gameday']
+                          .map((template) => DropdownMenuItem(
+                              value: template, child: Text(template)))
+                          .toList(),
+                      onChanged: (newValue) =>
+                          setState(() => _selectedTemplate = newValue!),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
-                    Text(
-                      "Welcome to Sportal",
-                      style: TextStyle(
-                        color: Color.fromRGBO(
-                            255, 255, 255, 0.4), // White text with opacity
-                        fontSize: 15.0, // Font size
-                        fontWeight: FontWeight.bold, // Bold text
+                    const SizedBox(height: 10),
+                    ...dropdownLabel("Association"),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedAssociation,
+                      items: _associations
+                          .map((association) => DropdownMenuItem(
+                              value: association, child: Text(association)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedAssociation = newValue!;
+                          _updateCompetitions(newValue);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...dropdownLabel("Competition"),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedCompetition,
+                      items: _competitions
+                          .map((competition) => DropdownMenuItem(
+                              value: competition, child: Text(competition)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedCompetition = newValue!;
+                          _updateSeasons(newValue, _selectedAssociation!);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...dropdownLabel("Season"),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedSeason,
+                      items: _seasons
+                          .map((season) => DropdownMenuItem(
+                              value: season, child: Text(season)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedSeason = newValue!;
+                          _updateTeams(newValue, _selectedCompetition!,
+                              _selectedAssociation!);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...dropdownLabel("Grade"),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedTeam,
+                      items: _teams
+                          .map((team) =>
+                              DropdownMenuItem(value: team, child: Text(team)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedTeam = newValue!;
+                          _updateFixtures(newValue, _selectedSeason!,
+                              _selectedCompetition!, _selectedAssociation!);
+                        });
+                      },
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    ...dropdownLabel("Round"),
+                    DropdownButtonFormField<String>(
+                      isExpanded: true,
+                      value: _selectedFixture,
+                      items: _fixtures
+                          .map((fixture) => DropdownMenuItem(
+                              value: fixture, child: Text(fixture)))
+                          .toList(),
+                      onChanged: (newValue) => setState(() {
+                        _selectedFixture = newValue!;
+                      }),
+                      decoration: InputDecoration(
+                        contentPadding: const EdgeInsets.all(15),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 25),
+                    ElevatedButton(
+                      onPressed: _generateButtonLoading ? null : _generateImage,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 90, vertical: 10),
+                        backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                      ),
+                      child: SizedBox(
+                        width: 100,
+                        height: 20,
+                        child: _generateButtonLoading
+                            ? const Center(
+                                child: SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.0,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: Text(
+                                  'Generate',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ],
                 ),
-                // Circular image on the right
-                CircleAvatar(
-                  radius: 30.0, // Adjust the size of the circular image
-                  backgroundImage: NetworkImage(
-                      _clubLogo ?? ''), // Replace with the actual image URL
-                ),
-              ],
-            ),
+              )
+            ],
           ),
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                ...dropdownLabel("Template"),
-                DropdownButtonFormField<String>(
-                  value: _selectedTemplate,
-                  items: ['Gameday']
-                      .map((template) => DropdownMenuItem(
-                          value: template, child: Text(template)))
-                      .toList(),
-                  onChanged: (newValue) =>
-                      setState(() => _selectedTemplate = newValue!),
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...dropdownLabel("Association"),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: _selectedAssociation,
-                  items: _associations
-                      .map((association) => DropdownMenuItem(
-                          value: association, child: Text(association)))
-                      .toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedAssociation = newValue!;
-                      _updateCompetitions(newValue);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...dropdownLabel("Competition"),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: _selectedCompetition,
-                  items: _competitions
-                      .map((competition) => DropdownMenuItem(
-                          value: competition, child: Text(competition)))
-                      .toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedCompetition = newValue!;
-                      _updateSeasons(newValue, _selectedAssociation!);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...dropdownLabel("Season"),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: _selectedSeason,
-                  items: _seasons
-                      .map((season) =>
-                          DropdownMenuItem(value: season, child: Text(season)))
-                      .toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedSeason = newValue!;
-                      _updateTeams(newValue, _selectedCompetition!,
-                          _selectedAssociation!);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...dropdownLabel("Grade"),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: _selectedTeam,
-                  items: _teams
-                      .map((team) =>
-                          DropdownMenuItem(value: team, child: Text(team)))
-                      .toList(),
-                  onChanged: (newValue) {
-                    setState(() {
-                      _selectedTeam = newValue!;
-                      _updateFixtures(newValue, _selectedSeason!,
-                          _selectedCompetition!, _selectedAssociation!);
-                    });
-                  },
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ...dropdownLabel("Round"),
-                DropdownButtonFormField<String>(
-                  isExpanded: true,
-                  value: _selectedFixture,
-                  items: _fixtures
-                      .map((fixture) => DropdownMenuItem(
-                          value: fixture, child: Text(fixture)))
-                      .toList(),
-                  onChanged: (newValue) => setState(() {
-                    _selectedFixture = newValue!;
-                  }),
-                  decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.all(15),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 25),
-                ElevatedButton(
-                  onPressed: _generateButtonLoading ? null : _generateImage,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 90, vertical: 10),
-                    backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                  ),
-                  child: SizedBox(
-                    width: 100, // Set the desired width
-                    height: 20, // Set the desired height
-                    child: _generateButtonLoading
-                        ? const Center(
-                            child: SizedBox(
-                              width:
-                                  16, // Set the desired size for the CircularProgressIndicator
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                strokeWidth:
-                                    2.0, // You can control the thickness
-                                color: Colors.white, // Matches the text color
-                              ),
-                            ),
-                          )
-                        : const Center(
-                            child: Text(
-                              'Generate',
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ),
-                  ),
-                ),
-              ],
-            ),
-          )
-        ],
-      )),
-    );
+        ),
+      );
   }
 }

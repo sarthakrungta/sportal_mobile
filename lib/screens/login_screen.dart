@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
           context,
           '/template',
           arguments: {
-            'email': _email,
+            'email': email,
             'clubData': _clubData,
           },
         );
@@ -61,8 +61,8 @@ class _LoginScreenState extends State<LoginScreen> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String? savedEmail = prefs.getString('email');
 
-    if (savedEmail != null) {
-      _fetchClubData(savedEmail);
+    if (savedEmail != null && savedEmail.contains('@')) {
+      await _fetchClubData(savedEmail);
     }
   }
 

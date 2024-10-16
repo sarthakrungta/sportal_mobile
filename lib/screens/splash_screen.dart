@@ -23,21 +23,12 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        color: Colors.deepPurple, // Adjust background color if needed
+        color: const Color.fromRGBO(60, 17, 185, 1),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center, // Centers the content vertically
             children: [
               Image.asset('assets/images/splash.png'), // Display your image
-              const SizedBox(height: 5), // Add spacing between image and text
-              const Text(
-                'Post More, Stress Less',
-                style: TextStyle(
-                  color: Colors.white, // Change the text color as needed
-                  fontSize: 24, // Adjust the font size
-                  fontWeight: FontWeight.bold, // Optional: make the text bold
-                ),
-              ),
             ],
           ),
         ),

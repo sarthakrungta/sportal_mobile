@@ -30,8 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
       final response = await http.get(Uri.parse(
           'https://sportal-backend.onrender.com/get-club-info/$email'));
 
-      print(response.toString());
-
       if (response.statusCode == 200) {
         setState(() {
           _clubData = jsonDecode(response.body);

@@ -32,14 +32,26 @@ class _TemplateScreenState extends State<TemplateScreen> {
   List<String> _fixtures = [];
 
   Map<String, dynamic> _clubData = {};
+  Map<String, dynamic> _clubDataPlayers = {};
 
   bool _generateButtonLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _clubData = widget.clubData;
     _readClubData(widget.email, widget.clubData);
+    _fetchPlayerClubData();
+  }
+
+  Future<void> _fetchPlayerClubData() async {
+    final response = await http.get(Uri.parse(
+        'http://sportal-backend.onrender.com/get-club-info-player-filter/${widget.email}'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _clubDataPlayers = jsonDecode(response.body);
+      });
+    }
   }
 
   List<Widget> dropdownLabel(String label) {
@@ -58,6 +70,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       String email, Map<String, dynamic> clubData) async {
     try {
       setState(() {
+        _clubData = clubData;
         _associations = (_clubData['association'] as List)
             .map((assoc) => assoc['associationName'] as String)
             .toList();
@@ -150,6 +163,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
   void _updateFixtures(String selectedTeam, String selectedSeason,
       String selectedCompetition, String selectedAssociation) {
     setState(() {
+      _selectedFixture = null;
+
       final association = _clubData['association'].firstWhere(
           (assoc) => assoc['associationName'] == selectedAssociation);
 
@@ -165,6 +180,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _fixtures = (team['fixtures'] as List)
           .map((fixture) => fixture['fixtureName'] as String)
           .toList();
+
     });
   }
 
@@ -319,12 +335,11 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Template"),
                   DropdownButtonFormField<String>(
                     value: _selectedTemplate,
-                    items: ['Gameday']
+                    items: ['Gameday', 'Starting X1']
                         .map((template) => DropdownMenuItem(
                             value: template, child: Text(template)))
                         .toList(),
-                    onChanged: (newValue) =>
-                        setState(() => _selectedTemplate = newValue!),
+                    onChanged: (newValue) => _updateTemplate(newValue),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(15),
                       border: OutlineInputBorder(
@@ -485,5 +500,22 @@ class _TemplateScreenState extends State<TemplateScreen> {
         ),
       ),
     );
+  }
+
+  _updateTemplate(String? newValue) {
+    setState(() {
+      _clubData = newValue == 'Gameday' ? widget.clubData : _clubDataPlayers;
+
+      _selectedAssociation = null;
+      _selectedCompetition = null;
+      _selectedSeason = null;
+      _selectedTeam = null;
+      _selectedFixture = null;
+
+
+      _associations = (_clubData['association'] as List)
+          .map((assoc) => assoc['associationName'] as String)
+          .toList();
+    });
   }
 }

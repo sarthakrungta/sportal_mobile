@@ -45,7 +45,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   Future<void> _fetchPlayerClubData() async {
     final response = await http.get(Uri.parse(
-        'http://sportal-backend.onrender.com/get-club-info-player-filter/${widget.email}'));
+        'https://sportal-backend.onrender.com/get-club-info-player-filter/${widget.email}'));
 
     if (response.statusCode == 200) {
       setState(() {
@@ -76,6 +76,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
             .toList();
 
         if (_associations.isNotEmpty) {
+          _selectedAssociation = _associations.first;
           _updateCompetitions(_associations.first);
         }
 
@@ -103,6 +104,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _selectedFixture = null;
 
       if (_competitions.isNotEmpty) {
+        _selectedCompetition = _competitions.first;
         _updateSeasons(_competitions.first, selectedAssociation);
       }
     });
@@ -127,6 +129,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _selectedFixture = null;
 
       if (_seasons.isNotEmpty) {
+        _selectedSeason = _seasons.first;
         _updateTeams(_seasons.first, selectedCompetition, selectedAssociation);
       }
     });
@@ -154,6 +157,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _selectedFixture = null;
 
       if (_teams.isNotEmpty) {
+        _selectedTeam = _teams.first;
         _updateFixtures(_teams.first, selectedSeason, selectedCompetition,
             selectedAssociation);
       }
@@ -191,6 +195,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
     if (_selectedFixture == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select a fixture.')));
+          setState(() {
+      _generateButtonLoading = false;
+    });
       return;
     }
 
@@ -209,9 +216,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
             true); // No need for condition since we've filtered above
 
     try {
+      final url = _selectedTemplate == 'Gameday' ? 'https://sportal-backend.onrender.com/generate-gameday-image' : 'https://sportal-backend.onrender.com/generate-players-image';
+
       final response = await http.post(
-        Uri.parse(
-            'https://sportal-backend.onrender.com/generate-gameday-image'),
+        Uri.parse(url),
         headers: <String, String>{'Content-Type': 'application/json'},
         body: jsonEncode({
           'teamA': selectedFixture['teamA'],
@@ -231,6 +239,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   (assoc) => assoc['associationName'] == _selectedAssociation)[
               'associationLogo'],
           "userEmail": widget.email,
+          "playerList": selectedFixture['playerList'],
+          "fixtureName": selectedFixture['fixtureName']
         }),
       );
 
@@ -255,6 +265,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
         _generateButtonLoading = false;
       });
     } catch (e) {
+      setState(() {
+        _generateButtonLoading = false;
+      });
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
@@ -461,7 +474,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     onPressed: _generateButtonLoading ? null : _generateImage,
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 90, vertical: 10),
+                          horizontal: 90, vertical: 20),
                       backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
@@ -505,6 +518,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
   _updateTemplate(String? newValue) {
     setState(() {
       _clubData = newValue == 'Gameday' ? widget.clubData : _clubDataPlayers;
+      _selectedTemplate = newValue ?? 'Gameday';
 
       _selectedAssociation = null;
       _selectedCompetition = null;

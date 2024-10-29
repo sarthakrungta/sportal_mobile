@@ -348,7 +348,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Template"),
                   DropdownButtonFormField<String>(
                     value: _selectedTemplate,
-                    items: ['Gameday', 'Starting X1']
+                    items: ['Gameday', 'Starting XI']
                         .map((template) => DropdownMenuItem(
                             value: template, child: Text(template)))
                         .toList(),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart'; // To get the temporary directory
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:share_plus/share_plus.dart';
 
 class ImageBottomSheet extends StatelessWidget {
@@ -16,10 +17,13 @@ class ImageBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final RoundedLoadingButtonController _btnController =
+        RoundedLoadingButtonController();
     return SafeArea(
       child: Container(
         // Set dynamic height based on screen size, reducing the chance of overflow
-        height: MediaQuery.of(context).size.height * 0.7, // 70% of screen height
+        height:
+            MediaQuery.of(context).size.height * 0.6, // 70% of screen height
         width: MediaQuery.of(context).size.width,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
         decoration: const BoxDecoration(
@@ -38,24 +42,19 @@ class ImageBottomSheet extends StatelessWidget {
                 fit: BoxFit.contain, // Ensures the image fits within the bounds
               ),
             ),
-            const SizedBox(height: 25,),
-            ElevatedButton(
-              onPressed: () async {
-                await _shareImage(imageBytes); // Call the method to share the image
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 90, vertical: 10),
-                backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(100),
-                ),
-              ),
-              child: const Text(
-                'Share',
-                style: TextStyle(
-                    fontSize: 16, color: Colors.white, fontWeight: FontWeight.w500),
-              ),
+            const SizedBox(
+              height: 25,
             ),
+            RoundedLoadingButton(
+                controller: _btnController,
+                color: const Color.fromRGBO(60, 17, 185, 1),
+                onPressed: () async {
+                  await _shareImage(imageBytes);
+                  _btnController.stop();
+                  Navigator.of(context).pop();
+                },
+                child:
+                    const Text('Share', style: TextStyle(color: Colors.white))),
             const SizedBox(height: 5),
             TextButton(
               onPressed: onRedesign,

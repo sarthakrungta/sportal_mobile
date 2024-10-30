@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert'; // For json decoding
 import 'package:http/http.dart' as http;
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
 import '../widgets/bottom_sheet_widget.dart'; // For making HTTP requests
 
@@ -35,6 +36,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
   Map<String, dynamic> _clubDataPlayers = {};
 
   bool _generateButtonLoading = false;
+
+  final RoundedLoadingButtonController _btnController =
+      RoundedLoadingButtonController();
 
   @override
   void initState() {
@@ -184,7 +188,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _fixtures = (team['fixtures'] as List)
           .map((fixture) => fixture['fixtureName'] as String)
           .toList();
-
     });
   }
 
@@ -195,9 +198,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
     if (_selectedFixture == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select a fixture.')));
-          setState(() {
-      _generateButtonLoading = false;
-    });
+      setState(() {
+        _generateButtonLoading = false;
+      });
       return;
     }
 
@@ -216,7 +219,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
             true); // No need for condition since we've filtered above
 
     try {
-      final url = _selectedTemplate == 'Gameday' ? 'https://sportal-backend.onrender.com/generate-gameday-image' : 'https://sportal-backend.onrender.com/generate-players-image';
+      final url = _selectedTemplate == 'Gameday'
+          ? 'https://sportal-backend.onrender.com/generate-gameday-image'
+          : 'https://sportal-backend.onrender.com/generate-players-image';
 
       final response = await http.post(
         Uri.parse(url),
@@ -264,10 +269,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
       setState(() {
         _generateButtonLoading = false;
       });
+      _btnController.stop();
     } catch (e) {
       setState(() {
         _generateButtonLoading = false;
       });
+      _btnController.stop();
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Error: $e')));
     }
@@ -470,42 +477,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     ),
                   ),
                   const SizedBox(height: 25),
-                  ElevatedButton(
-                    onPressed: _generateButtonLoading ? null : _generateImage,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 90, vertical: 20),
-                      backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                    ),
-                    child: SizedBox(
-                      width: 100,
-                      height: 20,
-                      child: _generateButtonLoading
-                          ? const Center(
-                              child: SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Center(
-                              child: Text(
-                                'Generate',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
+                  RoundedLoadingButton(
+                      controller: _btnController,
+                      color: const Color.fromRGBO(60, 17, 185, 1),
+                      onPressed: _generateButtonLoading ? null : _generateImage,
+                      child: const Text('Generate',
+                          style: TextStyle(color: Colors.white))),
                 ],
               ),
             )
@@ -525,7 +502,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _selectedSeason = null;
       _selectedTeam = null;
       _selectedFixture = null;
-
 
       _associations = (_clubData['association'] as List)
           .map((assoc) => assoc['associationName'] as String)

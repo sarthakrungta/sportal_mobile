@@ -13,6 +13,7 @@ dependencies:
   share_plus: ^10.0.2
   http: ^1.2.2
   shared_preferences: ^2.0.6
+  rounded_loading_button_plus: ^3.0.1
 
 
 dev_dependencies:

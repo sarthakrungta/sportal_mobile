@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,6 +21,9 @@ class _LoginScreenState extends State<LoginScreen> {
     super.initState();
     _checkLoginStatus();
   }
+
+  final RoundedLoadingButtonController _btnController =
+      RoundedLoadingButtonController();
 
   Future<void> _fetchClubData(String email) async {
     setState(() {
@@ -52,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
       setState(() {
         _isLoading = false; // Reset loading state
       });
+      _btnController.stop();
     }
   }
 
@@ -195,27 +200,19 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildLoginButton() {
-    return ElevatedButton(
-      onPressed: () async {
-        if (_email.isNotEmpty) {
-          await _fetchClubData(_email);
-        } else {
-          setState(() {
-            _loginFail = true;
-          });
-        }
-      },
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        backgroundColor: const Color.fromRGBO(60, 17, 185, 1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-      child: const Text(
-        'Login',
-        style: TextStyle(fontSize: 18, color: Colors.white),
-      ),
-    );
+    return RoundedLoadingButton(
+        controller: _btnController,
+        color: const Color.fromRGBO(60, 17, 185, 1),
+        onPressed: () async {
+          if (_email.isNotEmpty) {
+            await _fetchClubData(_email);
+          } else {
+            setState(() {
+              _loginFail = true;
+            });
+            _btnController.stop();
+          }
+        },
+        child: const Text('Login', style: TextStyle(color: Colors.white)));
   }
 }

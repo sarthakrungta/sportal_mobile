@@ -37,13 +37,15 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   bool _generateButtonLoading = false;
 
+  bool _errorMessage = false;
+
   final RoundedLoadingButtonController _btnController =
       RoundedLoadingButtonController();
 
   @override
   void initState() {
     super.initState();
-    _readClubData(widget.email, widget.clubData);
+    _readClubData(widget.clubData);
     _fetchPlayerClubData();
   }
 
@@ -70,10 +72,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
     ];
   }
 
-  Future<void> _readClubData(
-      String email, Map<String, dynamic> clubData) async {
+  Future<void> _readClubData(Map<String, dynamic> clubData) async {
     try {
       setState(() {
+        _errorMessage = false;
         _clubData = clubData;
         _associations = (_clubData['association'] as List)
             .map((assoc) => assoc['associationName'] as String)
@@ -82,6 +84,30 @@ class _TemplateScreenState extends State<TemplateScreen> {
         if (_associations.isNotEmpty) {
           _selectedAssociation = _associations.first;
           _updateCompetitions(_associations.first);
+        } else {
+          _errorMessage = true;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  'Starting XI not available yet',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+              backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
+              behavior: SnackBarBehavior
+                  .floating, // Optional: to make it float above the bottom
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10), // Rounded corners
+              ),
+            ),
+          );
+
+          _competitions = [];
+          _seasons = [];
+          _teams = [];
+          _fixtures = [];
         }
 
         _clubLogo = _clubData['clubLogo'];
@@ -192,17 +218,16 @@ class _TemplateScreenState extends State<TemplateScreen> {
   }
 
   Future<void> _generateImage() async {
-    setState(() {
-      _generateButtonLoading = true;
-    });
     if (_selectedFixture == null) {
       ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select a fixture.')));
-      setState(() {
-        _generateButtonLoading = false;
-      });
+      _btnController.stop();
       return;
     }
+
+    setState(() {
+      _generateButtonLoading = true;
+    });
 
     // Use the additional parameters to find the correct fixture
     final selectedFixture = (_clubData['association'] as List)
@@ -290,8 +315,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
   @override
   Widget build(BuildContext context) {
     final safeAreaPadding = MediaQuery.paddingOf(context).top;
-    print("TOP APP BAR HEIGHT: ");
-    print(safeAreaPadding);
     return Scaffold(
       backgroundColor: const Color.fromRGBO(249, 253, 254, 1),
       body: SingleChildScrollView(
@@ -479,8 +502,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   const SizedBox(height: 25),
                   RoundedLoadingButton(
                       controller: _btnController,
-                      color: const Color.fromRGBO(60, 17, 185, 1),
-                      onPressed: _generateButtonLoading ? null : _generateImage,
+                      color: _errorMessage
+                          ? Colors.blueGrey
+                          : const Color.fromRGBO(60, 17, 185, 1),
+                      onPressed: _generateButtonLoading || _errorMessage
+                          ? null
+                          : _generateImage,
                       child: const Text('Generate',
                           style: TextStyle(color: Colors.white))),
                 ],
@@ -503,9 +530,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _selectedTeam = null;
       _selectedFixture = null;
 
-      _associations = (_clubData['association'] as List)
-          .map((assoc) => assoc['associationName'] as String)
-          .toList();
+      _readClubData(_clubData);
     });
   }
 }

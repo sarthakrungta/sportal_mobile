@@ -86,8 +86,7 @@ class ImageBottomSheet extends StatelessWidget {
       await file.writeAsBytes(imageBytes);
 
       // Share the image file
-      await Share.shareXFiles([XFile(filePath)],
-          text: 'Check out this gameday image!');
+      await Share.shareXFiles([XFile(filePath)]);
     } catch (e) {
       print("Error sharing image: $e");
     }

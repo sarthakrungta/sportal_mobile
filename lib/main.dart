@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My App',
       theme: ThemeData(
+        fontFamily: 'Poppins',
         primarySwatch: Colors.deepPurple,
       ),
       onGenerateRoute: Routes.generateRoute,

@@ -39,6 +39,38 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   bool _errorMessage = false;
 
+  final dropdownInputDecoration = InputDecoration(
+    contentPadding: const EdgeInsets.all(15),
+    border: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(
+        color: Color(0xFFE3E5E5), // Default border color
+        width: 1.4,
+      ),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(
+        color: Color(0xFFE3E5E5), 
+        width: 1.4,
+      ),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: BorderRadius.circular(10),
+      borderSide: const BorderSide(
+        color: Color(0xFFE3E5E5), 
+        width: 1.4,
+      ),
+    ),
+  );
+
+  final dropdownBoxShadow = BoxShadow(
+                            color: Colors.grey.withOpacity(0.5),
+                            spreadRadius: 1.2,
+                            blurRadius: 4,
+                            offset: const Offset(0, 2), // changes position of shadow
+                          );
+
   final RoundedLoadingButtonController _btnController =
       RoundedLoadingButtonController();
 
@@ -64,7 +96,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
     return [
       Align(
         alignment: Alignment.centerLeft,
-        child: Text(label),
+        child: Text(
+          label,
+          style: TextStyle(color: Colors.grey.shade600),
+        ),
       ),
       const SizedBox(
         height: 5,
@@ -376,127 +411,156 @@ class _TemplateScreenState extends State<TemplateScreen> {
               child: Column(
                 children: [
                   ...dropdownLabel("Template"),
-                  DropdownButtonFormField<String>(
-                    value: _selectedTemplate,
-                    items: ['Gameday', 'Starting XI']
-                        .map((template) => DropdownMenuItem(
-                            value: template, child: Text(template)))
-                        .toList(),
-                    onChanged: (newValue) => _updateTemplate(newValue),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          dropdownBoxShadow
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      value: _selectedTemplate,
+                      items: ['Gameday', 'Starting XI']
+                          .map((template) => DropdownMenuItem(
+                              value: template, child: Text(template)))
+                          .toList(),
+                      onChanged: (newValue) => _updateTemplate(newValue),
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ...dropdownLabel("Association"),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: _selectedAssociation,
-                    items: _associations
-                        .map((association) => DropdownMenuItem(
-                            value: association, child: Text(association)))
-                        .toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedAssociation = newValue!;
-                        _updateCompetitions(newValue);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          dropdownBoxShadow
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      isExpanded: true,
+                      value: _selectedAssociation,
+                      items: _associations
+                          .map((association) => DropdownMenuItem(
+                              value: association, child: Text(association)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedAssociation = newValue!;
+                          _updateCompetitions(newValue);
+                        });
+                      },
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ...dropdownLabel("Competition"),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: _selectedCompetition,
-                    items: _competitions
-                        .map((competition) => DropdownMenuItem(
-                            value: competition, child: Text(competition)))
-                        .toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedCompetition = newValue!;
-                        _updateSeasons(newValue, _selectedAssociation!);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          dropdownBoxShadow
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      isExpanded: true,
+                      value: _selectedCompetition,
+                      items: _competitions
+                          .map((competition) => DropdownMenuItem(
+                                value: competition,
+                                child: Text(competition),
+                              ))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedCompetition = newValue!;
+                          _updateSeasons(newValue, _selectedAssociation!);
+                        });
+                      },
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ...dropdownLabel("Season"),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: _selectedSeason,
-                    items: _seasons
-                        .map((season) => DropdownMenuItem(
-                            value: season, child: Text(season)))
-                        .toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedSeason = newValue!;
-                        _updateTeams(newValue, _selectedCompetition!,
-                            _selectedAssociation!);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        dropdownBoxShadow
+                      ],
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      isExpanded: true,
+                      value: _selectedSeason,
+                      items: _seasons
+                          .map((season) => DropdownMenuItem(
+                                value: season,
+                                child: Text(season),
+                              ))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedSeason = newValue!;
+                          _updateTeams(newValue, _selectedCompetition!,
+                              _selectedAssociation!);
+                        });
+                      },
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ...dropdownLabel("Grade"),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: _selectedTeam,
-                    items: _teams
-                        .map((team) =>
-                            DropdownMenuItem(value: team, child: Text(team)))
-                        .toList(),
-                    onChanged: (newValue) {
-                      setState(() {
-                        _selectedTeam = newValue!;
-                        _updateFixtures(newValue, _selectedSeason!,
-                            _selectedCompetition!, _selectedAssociation!);
-                      });
-                    },
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          dropdownBoxShadow
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      isExpanded: true,
+                      value: _selectedTeam,
+                      items: _teams
+                          .map((team) =>
+                              DropdownMenuItem(value: team, child: Text(team)))
+                          .toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedTeam = newValue!;
+                          _updateFixtures(newValue, _selectedSeason!,
+                              _selectedCompetition!, _selectedAssociation!);
+                        });
+                      },
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
                   ...dropdownLabel("Round"),
-                  DropdownButtonFormField<String>(
-                    isExpanded: true,
-                    value: _selectedFixture,
-                    items: _fixtures
-                        .map((fixture) => DropdownMenuItem(
-                            value: fixture, child: Text(fixture)))
-                        .toList(),
-                    onChanged: (newValue) => setState(() {
-                      _selectedFixture = newValue!;
-                    }),
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.all(15),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
+                  Container(
+                    decoration: BoxDecoration(
+                        boxShadow: [
+                          dropdownBoxShadow
+                        ],
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10)),
+                    child: DropdownButtonFormField<String>(
+                      dropdownColor: Colors.white,
+                      isExpanded: true,
+                      value: _selectedFixture,
+                      items: _fixtures
+                          .map((fixture) => DropdownMenuItem(
+                              value: fixture, child: Text(fixture)))
+                          .toList(),
+                      onChanged: (newValue) => setState(() {
+                        _selectedFixture = newValue!;
+                      }),
+                      decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 25),

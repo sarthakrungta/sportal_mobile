@@ -21,31 +21,45 @@ class ImageBottomSheet extends StatelessWidget {
         RoundedLoadingButtonController();
     return SafeArea(
       child: Container(
-        // Set dynamic height based on screen size, reducing the chance of overflow
-        height:
-            MediaQuery.of(context).size.height * 0.6, // 70% of screen height
-        width: MediaQuery.of(context).size.width,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(24.0),
+          // Set dynamic height based on screen size, reducing the chance of overflow
+          height:
+              MediaQuery.of(context).size.height * 0.6, // 70% of screen height
+          width: MediaQuery.of(context).size.width,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(
+              top: Radius.circular(24.0),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Wrapping the image in a Flexible widget to avoid overflow
-            Flexible(
-              child: Image.memory(
-                imageBytes,
-                fit: BoxFit.contain, // Ensures the image fits within the bounds
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Wrapping the image in a Flexible widget with a subtle shadow
+              Flexible(
+                child: Container(
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black
+                            .withOpacity(0.1), // Subtle shadow color
+                        spreadRadius: 2, // Slight spread
+                        blurRadius: 5, // Soft blur
+                        offset: const Offset(0, 3), // Drop shadow (bottom only)
+                      ),
+                    ],
+                  ),
+                  child: Image.memory(
+                    imageBytes,
+                    fit: BoxFit
+                        .contain, // Ensures the image fits within the bounds
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(
-              height: 25,
-            ),
-            RoundedLoadingButton(
+              const SizedBox(
+                height: 25,
+              ),
+              RoundedLoadingButton(
                 controller: _btnController,
                 color: const Color.fromRGBO(60, 17, 185, 1),
                 onPressed: () async {
@@ -54,22 +68,22 @@ class ImageBottomSheet extends StatelessWidget {
                   Navigator.of(context).pop();
                 },
                 child:
-                    const Text('Share', style: TextStyle(color: Colors.white))),
-            const SizedBox(height: 5),
-            TextButton(
-              onPressed: onRedesign,
-              child: const Text(
-                'Re-design',
-                style: TextStyle(
-                  color: Color.fromRGBO(107, 78, 255, 1), // Specific color
-                  fontSize: 16, // Adjust font size if needed
+                    const Text('Share', style: TextStyle(color: Colors.white)),
+              ),
+              const SizedBox(height: 5),
+              TextButton(
+                onPressed: onRedesign,
+                child: const Text(
+                  'Re-design',
+                  style: TextStyle(
+                    color: Color.fromRGBO(107, 78, 255, 1), // Specific color
+                    fontSize: 16, // Adjust font size if needed
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 10),
-          ],
-        ),
-      ),
+              const SizedBox(height: 10),
+            ],
+          )),
     );
   }
 

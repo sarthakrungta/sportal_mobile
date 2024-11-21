@@ -121,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'Welcome',
           style: TextStyle(
-            fontFamily: 'Poppins',
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: Colors.black,
@@ -173,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const BorderSide(color: Colors.deepPurpleAccent, width: 2),
             ),
             filled: true,
-            fillColor: Colors.grey.shade100,
+            fillColor: Colors.white,
           ),
         ),
       ],
@@ -191,7 +190,6 @@ class _LoginScreenState extends State<LoginScreen> {
       child: const Text(
         'Login Failed',
         style: TextStyle(
-          fontFamily: 'Poppins',
           color: Colors.white,
           fontSize: 15.0,
         ),

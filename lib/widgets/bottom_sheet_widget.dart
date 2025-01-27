@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart'; // To get the temporary directory
 import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:share_plus/share_plus.dart';
+import 'dart:html' as html;
+
 
 class ImageBottomSheet extends StatelessWidget {
   final Uint8List imageBytes;
@@ -88,21 +90,49 @@ class ImageBottomSheet extends StatelessWidget {
   }
 
   Future<void> _shareImage(Uint8List imageBytes) async {
-    try {
-      // Get the temporary directory
-      final tempDir = await getTemporaryDirectory();
+  try {
+    // Convert imageBytes to a Blob and create a URL for it
+    final blob = html.Blob([imageBytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
 
-      // Create the file path
-      final filePath = '${tempDir.path}/shared_image.png';
-
-      // Write the image bytes to a file
-      final file = File(filePath);
-      await file.writeAsBytes(imageBytes);
-
-      // Share the image file
-      await Share.shareXFiles([XFile(filePath)]);
-    } catch (e) {
-      print("Error sharing image: $e");
+    // Use Web Share API if available
+    if (html.window.navigator.share != null) {
+      await html.window.navigator.share({
+        'title': 'Shared Image',
+        'text': 'Check out this image!',
+        'url': url,
+      });
+    } else {
+      // If Web Share API is not supported, fallback to download
+      _downloadImage(imageBytes);
     }
+
+    // Revoke the object URL after sharing
+    html.Url.revokeObjectUrl(url);
+  } catch (e) {
+    print("Error sharing image: $e");
+    _downloadImage(imageBytes); // Fallback to download
   }
+}
+
+void _downloadImage(Uint8List imageBytes) {
+  try {
+    // Convert imageBytes to a Blob and create a URL for it
+    final blob = html.Blob([imageBytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
+
+    // Create an anchor element and trigger a download
+    final anchor = html.AnchorElement(href: url)
+      ..target = 'blank'
+      ..download = 'shared_image.png'
+      ..click();
+
+    // Revoke the object URL after download
+    html.Url.revokeObjectUrl(url);
+  } catch (e) {
+    print("Error downloading image: $e");
+  }
+}
+
+
 }

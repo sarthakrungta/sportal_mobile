@@ -65,12 +65,12 @@ class ImageBottomSheet extends StatelessWidget {
                 controller: _btnController,
                 color: const Color.fromRGBO(60, 17, 185, 1),
                 onPressed: () async {
-                  await _shareImage(imageBytes);
+                  _downloadImage(imageBytes);
                   _btnController.stop();
                   Navigator.of(context).pop();
                 },
                 child:
-                    const Text('Share', style: TextStyle(color: Colors.white)),
+                    const Text('Download', style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 5),
               TextButton(
@@ -88,32 +88,6 @@ class ImageBottomSheet extends StatelessWidget {
           )),
     );
   }
-
-  Future<void> _shareImage(Uint8List imageBytes) async {
-  try {
-    // Convert imageBytes to a Blob and create a URL for it
-    final blob = html.Blob([imageBytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
-
-    // Use Web Share API if available
-    if (html.window.navigator.share != null) {
-      await html.window.navigator.share({
-        'title': 'Shared Image',
-        'text': 'Check out this image!',
-        'url': url,
-      });
-    } else {
-      // If Web Share API is not supported, fallback to download
-      _downloadImage(imageBytes);
-    }
-
-    // Revoke the object URL after sharing
-    html.Url.revokeObjectUrl(url);
-  } catch (e) {
-    print("Error sharing image: $e");
-    _downloadImage(imageBytes); // Fallback to download
-  }
-}
 
 void _downloadImage(Uint8List imageBytes) {
   try {

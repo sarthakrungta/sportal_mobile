@@ -51,25 +51,25 @@ class _TemplateScreenState extends State<TemplateScreen> {
     enabledBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: const BorderSide(
-        color: Color(0xFFE3E5E5), 
+        color: Color(0xFFE3E5E5),
         width: 1.4,
       ),
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: const BorderSide(
-        color: Color(0xFFE3E5E5), 
+        color: Color(0xFFE3E5E5),
         width: 1.4,
       ),
     ),
   );
 
   final dropdownBoxShadow = BoxShadow(
-                            color: Colors.grey.withOpacity(0.5),
-                            spreadRadius: 1.2,
-                            blurRadius: 4,
-                            offset: const Offset(0, 2), // changes position of shadow
-                          );
+    color: Colors.grey.withOpacity(0.5),
+    spreadRadius: 1.2,
+    blurRadius: 4,
+    offset: const Offset(0, 2), // changes position of shadow
+  );
 
   final RoundedLoadingButtonController _btnController =
       RoundedLoadingButtonController();
@@ -254,8 +254,24 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   Future<void> _generateImage() async {
     if (_selectedFixture == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select a fixture.')));
+      
+                ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  'Please select the round',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+              backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
+              behavior: SnackBarBehavior
+                  .floating, // Optional: to make it float above the bottom
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10), // Rounded corners
+              ),
+            ),
+          );
       _btnController.stop();
       return;
     }
@@ -322,6 +338,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
               onRedesign: () {
                 Navigator.of(context).pop();
               },
+              imageName: _selectedTemplate +
+                  "-" +
+                  _selectedTeam! +
+                  "-" +
+                  _selectedFixture! +
+                  ".png",
             );
           },
         );
@@ -413,9 +435,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Template"),
                   Container(
                     decoration: BoxDecoration(
-                        boxShadow: [
-                          dropdownBoxShadow
-                        ],
+                        boxShadow: [dropdownBoxShadow],
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
                     child: DropdownButtonFormField<String>(
@@ -433,9 +453,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Association"),
                   Container(
                     decoration: BoxDecoration(
-                        boxShadow: [
-                          dropdownBoxShadow
-                        ],
+                        boxShadow: [dropdownBoxShadow],
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
                     child: DropdownButtonFormField<String>(
@@ -459,9 +477,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Competition"),
                   Container(
                     decoration: BoxDecoration(
-                        boxShadow: [
-                          dropdownBoxShadow
-                        ],
+                        boxShadow: [dropdownBoxShadow],
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
                     child: DropdownButtonFormField<String>(
@@ -487,9 +503,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Season"),
                   Container(
                     decoration: BoxDecoration(
-                      boxShadow: [
-                        dropdownBoxShadow
-                      ],
+                      boxShadow: [dropdownBoxShadow],
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(10),
                     ),
@@ -517,9 +531,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Grade"),
                   Container(
                     decoration: BoxDecoration(
-                        boxShadow: [
-                          dropdownBoxShadow
-                        ],
+                        boxShadow: [dropdownBoxShadow],
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
                     child: DropdownButtonFormField<String>(
@@ -544,9 +556,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   ...dropdownLabel("Round"),
                   Container(
                     decoration: BoxDecoration(
-                        boxShadow: [
-                          dropdownBoxShadow
-                        ],
+                        boxShadow: [dropdownBoxShadow],
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(10)),
                     child: DropdownButtonFormField<String>(

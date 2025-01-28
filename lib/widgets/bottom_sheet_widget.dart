@@ -6,16 +6,17 @@ import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 import 'package:share_plus/share_plus.dart';
 import 'dart:html' as html;
 
-
 class ImageBottomSheet extends StatelessWidget {
   final Uint8List imageBytes;
   final VoidCallback onRedesign;
+  final String imageName;
 
   const ImageBottomSheet({
-    Key? key,
+    super.key,
     required this.imageBytes,
     required this.onRedesign,
-  }) : super(key: key);
+    required this.imageName
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -68,9 +69,26 @@ class ImageBottomSheet extends StatelessWidget {
                   _downloadImage(imageBytes);
                   _btnController.stop();
                   Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  'Magic Downloaded',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+              backgroundColor: Color.fromRGBO(68,186,85, 1), // Custom purple color
+              behavior: SnackBarBehavior
+                  .floating, // Optional: to make it float above the bottom
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10), // Rounded corners
+              ),
+            ),
+          );
                 },
-                child:
-                    const Text('Download', style: TextStyle(color: Colors.white)),
+                child: const Text('Download',
+                    style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 5),
               TextButton(
@@ -89,24 +107,22 @@ class ImageBottomSheet extends StatelessWidget {
     );
   }
 
-void _downloadImage(Uint8List imageBytes) {
-  try {
-    // Convert imageBytes to a Blob and create a URL for it
-    final blob = html.Blob([imageBytes]);
-    final url = html.Url.createObjectUrlFromBlob(blob);
+  void _downloadImage(Uint8List imageBytes) {
+    try {
+      // Convert imageBytes to a Blob and create a URL for it
+      final blob = html.Blob([imageBytes]);
+      final url = html.Url.createObjectUrlFromBlob(blob);
 
-    // Create an anchor element and trigger a download
-    final anchor = html.AnchorElement(href: url)
-      ..target = 'blank'
-      ..download = 'shared_image.png'
-      ..click();
+      // Create an anchor element and trigger a download
+      final anchor = html.AnchorElement(href: url)
+        ..target = 'blank'
+        ..download = imageName
+        ..click();
 
-    // Revoke the object URL after download
-    html.Url.revokeObjectUrl(url);
-  } catch (e) {
-    print("Error downloading image: $e");
+      // Revoke the object URL after download
+      html.Url.revokeObjectUrl(url);
+    } catch (e) {
+      print("Error downloading image: $e");
+    }
   }
-}
-
-
 }

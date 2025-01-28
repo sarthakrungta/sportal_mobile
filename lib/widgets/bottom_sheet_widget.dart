@@ -8,12 +8,14 @@ import 'package:share_plus/share_plus.dart';
 class ImageBottomSheet extends StatelessWidget {
   final Uint8List imageBytes;
   final VoidCallback onRedesign;
+  final String imageName;
 
   const ImageBottomSheet({
-    Key? key,
+    super.key,
     required this.imageBytes,
     required this.onRedesign,
-  }) : super(key: key);
+    required this.imageName
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +68,23 @@ class ImageBottomSheet extends StatelessWidget {
                   await _shareImage(imageBytes);
                   _btnController.stop();
                   Navigator.of(context).pop();
+                            ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4.0),
+                child: Text(
+                  'Magic Created',
+                  style: TextStyle(color: Colors.white, fontSize: 16),
+                ),
+              ),
+              backgroundColor: Color.fromRGBO(68,186,85, 1), // Custom purple color
+              behavior: SnackBarBehavior
+                  .floating, // Optional: to make it float above the bottom
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10), // Rounded corners
+              ),
+            ),
+          );
                 },
                 child:
                     const Text('Share', style: TextStyle(color: Colors.white)),

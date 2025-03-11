@@ -123,11 +123,11 @@ class _TemplateScreenState extends State<TemplateScreen> {
           _errorMessage = true;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 4.0),
+              content: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4.0),
                 child: Text(
-                  'Starting XI not available yet',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
+                  '$_selectedTemplate not available yet',
+                  style: const TextStyle(color: Colors.white, fontSize: 16),
                 ),
               ),
               backgroundColor: const Color(0xFF7A5FFF), // Custom purple color

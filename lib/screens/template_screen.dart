@@ -34,10 +34,13 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   Map<String, dynamic> _clubData = {};
   Map<String, dynamic> _clubDataPlayers = {};
+  Map<String, dynamic> _clubDataResults = {};
 
   bool _generateButtonLoading = false;
 
   bool _errorMessage = false;
+
+  final String baseUrl = 'https://sportal-backend.onrender.com/';
 
   final dropdownInputDecoration = InputDecoration(
     contentPadding: const EdgeInsets.all(15),
@@ -79,15 +82,27 @@ class _TemplateScreenState extends State<TemplateScreen> {
     super.initState();
     _readClubData(widget.clubData);
     _fetchPlayerClubData();
+    _fetchResultsClubData();
   }
 
   Future<void> _fetchPlayerClubData() async {
-    final response = await http.get(Uri.parse(
-        'https://sportal-backend.onrender.com/get-club-info-player-filter/${widget.email}'));
+    final response = await http.get(
+        Uri.parse('${baseUrl}get-club-info-player-filter/${widget.email}'));
 
     if (response.statusCode == 200) {
       setState(() {
         _clubDataPlayers = jsonDecode(response.body);
+      });
+    }
+  }
+
+  Future<void> _fetchResultsClubData() async {
+    final response = await http.get(
+        Uri.parse('${baseUrl}get-club-info-results-filter/${widget.email}'));
+
+    if (response.statusCode == 200) {
+      setState(() {
+        _clubDataResults = jsonDecode(response.body);
       });
     }
   }
@@ -254,24 +269,23 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   Future<void> _generateImage() async {
     if (_selectedFixture == null) {
-      
-                ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 4.0),
-                child: Text(
-                  'Please select the round',
-                  style: TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-              backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
-              behavior: SnackBarBehavior
-                  .floating, // Optional: to make it float above the bottom
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Rounded corners
-              ),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Padding(
+            padding: EdgeInsets.symmetric(vertical: 4.0),
+            child: Text(
+              'Please select the round',
+              style: TextStyle(color: Colors.white, fontSize: 16),
             ),
-          );
+          ),
+          backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
+          behavior: SnackBarBehavior
+              .floating, // Optional: to make it float above the bottom
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10), // Rounded corners
+          ),
+        ),
+      );
       _btnController.stop();
       return;
     }
@@ -295,9 +309,13 @@ class _TemplateScreenState extends State<TemplateScreen> {
             true); // No need for condition since we've filtered above
 
     try {
-      final url = _selectedTemplate == 'Gameday'
-          ? 'https://sportal-backend.onrender.com/generate-gameday-image'
-          : 'https://sportal-backend.onrender.com/generate-players-image';
+      final templateEndpoints = {
+        'Gameday': 'generate-gameday-image',
+        'Starting XI': 'generate-players-image',
+        'Match Result': 'generate-result-image',
+      };
+
+      final url = '$baseUrl${templateEndpoints[_selectedTemplate]}';
 
       final response = await http.post(
         Uri.parse(url),
@@ -441,7 +459,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     child: DropdownButtonFormField<String>(
                       dropdownColor: Colors.white,
                       value: _selectedTemplate,
-                      items: ['Gameday', 'Starting XI']
+                      items: ['Gameday', 'Starting XI', 'Match Result']
                           .map((template) => DropdownMenuItem(
                               value: template, child: Text(template)))
                           .toList(),
@@ -595,7 +613,14 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
   _updateTemplate(String? newValue) {
     setState(() {
-      _clubData = newValue == 'Gameday' ? widget.clubData : _clubDataPlayers;
+      if (newValue == 'Gameday') {
+        _clubData = widget.clubData;
+      } else if (newValue == 'Starting XI') {
+        _clubData = _clubDataPlayers;
+      } else if (newValue == 'Match Result') {
+        _clubData = _clubDataResults;
+      }
+
       _selectedTemplate = newValue ?? 'Gameday';
 
       _selectedAssociation = null;

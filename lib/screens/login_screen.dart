@@ -94,7 +94,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     const SizedBox(height: 100),
                     _buildHeader(),
-                    const SizedBox(height: 350),
+                    Image.asset('assets/images/amico.png'),
+                    const SizedBox(height: 100),
                     _buildTextField(
                       label: "Email",
                       hintText: "",

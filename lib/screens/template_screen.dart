@@ -339,7 +339,9 @@ class _TemplateScreenState extends State<TemplateScreen> {
               'associationLogo'],
           "userEmail": widget.email,
           "playerList": selectedFixture['playerList'],
-          "fixtureName": selectedFixture['fixtureName']
+          "fixtureName": selectedFixture['fixtureName'],
+          "finalScores": selectedFixture['finalScores'],
+          
         }),
       );
 

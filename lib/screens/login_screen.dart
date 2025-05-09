@@ -204,7 +204,7 @@ class _LoginScreenState extends State<LoginScreen> {
         color: const Color.fromRGBO(60, 17, 185, 1),
         onPressed: () async {
           if (_email.isNotEmpty) {
-            await _fetchClubData(_email);
+            await _fetchClubData(_email.toLowerCase());
           } else {
             setState(() {
               _loginFail = true;

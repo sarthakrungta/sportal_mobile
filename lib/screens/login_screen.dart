@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
     String? savedEmail = prefs.getString('email');
 
     if (savedEmail != null && savedEmail.contains('@')) {
-      await _fetchClubData(savedEmail);
+      await _fetchClubData(savedEmail.toLowerCase());
     }
   }
 

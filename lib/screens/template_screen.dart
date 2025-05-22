@@ -311,7 +311,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
     try {
       final templateEndpoints = {
         'Gameday': 'generate-gameday-image',
-        'Starting XI': 'generate-players-image',
+        'Lineup': 'generate-players-image',
         'Match Result': 'generate-result-image',
       };
 
@@ -461,7 +461,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     child: DropdownButtonFormField<String>(
                       dropdownColor: Colors.white,
                       value: _selectedTemplate,
-                      items: ['Gameday', 'Starting XI', 'Match Result']
+                      items: ['Gameday', 'Lineup', 'Match Result']
                           .map((template) => DropdownMenuItem(
                               value: template, child: Text(template)))
                           .toList(),
@@ -617,7 +617,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
     setState(() {
       if (newValue == 'Gameday') {
         _clubData = widget.clubData;
-      } else if (newValue == 'Starting XI') {
+      } else if (newValue == 'Lineup') {
         _clubData = _clubDataPlayers;
       } else if (newValue == 'Match Result') {
         _clubData = _clubDataResults;

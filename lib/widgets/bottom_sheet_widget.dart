@@ -108,21 +108,30 @@ class ImageBottomSheet extends StatelessWidget {
   }
 
   void _downloadImage(Uint8List imageBytes) {
-    try {
-      // Convert imageBytes to a Blob and create a URL for it
-      final blob = html.Blob([imageBytes]);
-      final url = html.Url.createObjectUrlFromBlob(blob);
+  try {
+    // Create a Blob from the image bytes
+    final blob = html.Blob([imageBytes]);
+    final url = html.Url.createObjectUrlFromBlob(blob);
 
-      // Create an anchor element and trigger a download
-      final anchor = html.AnchorElement(href: url)
-        ..target = 'blank'
-        ..download = imageName
-        ..click();
+    // Create a hidden anchor element
+    final anchor = html.AnchorElement(href: url)
+      ..download = imageName
+      ..style.display = 'none';
 
-      // Revoke the object URL after download
+    // Append it to the DOM
+    html.document.body?.append(anchor);
+
+    // Trigger the download (user-initiated since inside onPressed)
+    anchor.click();
+
+    // Clean up: give the browser a moment before revoking the object URL
+    Future.delayed(const Duration(seconds: 1), () {
       html.Url.revokeObjectUrl(url);
-    } catch (e) {
-      print("Error downloading image: $e");
-    }
+      anchor.remove();
+    });
+  } catch (e) {
+    print("Error downloading image: $e");
   }
+}
+
 }

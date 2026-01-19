@@ -25,40 +25,41 @@ class _LoginScreenState extends State<LoginScreen> {
   final RoundedLoadingButtonController _btnController =
       RoundedLoadingButtonController();
 
-  Future<void> _fetchClubData(String email) async {
-    setState(() {
-      _isLoading = true; // Set loading state to true
-    });
+Future<void> _fetchClubData(String email) async {
+  setState(() {
+    _isLoading = true;
+  });
 
-    try {
-      final response = await http.get(Uri.parse(
-          'https://sportal-backend.onrender.com/get-club-info/$email'));
+  try {
+    final response = await http.get(
+      Uri.parse('http://localhost:3000/api/org-data?userEmail=$email')
+    );
 
-      if (response.statusCode == 200) {
-        setState(() {
-          _clubData = jsonDecode(response.body);
-        });
-        _saveEmail();
-        Navigator.pushNamed(
-          context,
-          '/template',
-          arguments: {
-            'email': email,
-            'clubData': _clubData,
-          },
-        );
-      } else {
-        setState(() {
-          _loginFail = true;
-        });
-      }
-    } finally {
+    if (response.statusCode == 200) {
       setState(() {
-        _isLoading = false; // Reset loading state
+        _clubData = jsonDecode(response.body);
       });
-      _btnController.stop();
+      _saveEmail();
+      Navigator.pushNamed(
+        context,
+        '/template',
+        arguments: {
+          'email': email,
+          'clubData': _clubData,
+        },
+      );
+    } else {
+      setState(() {
+        _loginFail = true;
+      });
     }
+  } finally {
+    setState(() {
+      _isLoading = false;
+    });
+    _btnController.stop();
   }
+}
 
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'dart:convert'; // For json decoding
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:rounded_loading_button_plus/rounded_loading_button.dart';
 
-import '../widgets/bottom_sheet_widget.dart'; // For making HTTP requests
+import '../widgets/bottom_sheet_widget.dart';
 
 class TemplateScreen extends StatefulWidget {
   final Map<String, dynamic> clubData;
@@ -18,36 +18,30 @@ class TemplateScreen extends StatefulWidget {
 
 class _TemplateScreenState extends State<TemplateScreen> {
   String _selectedTemplate = 'Gameday';
-  String? _selectedAssociation;
-  String? _selectedCompetition;
   String? _selectedSeason;
   String? _selectedTeam;
   String? _selectedFixture;
 
   String? _clubLogo;
 
-  List<String> _associations = [];
-  List<String> _competitions = [];
-  List<String> _seasons = [];
-  List<String> _teams = [];
-  List<String> _fixtures = [];
+  List<Map<String, dynamic>> _seasons = [];
+  List<Map<String, dynamic>> _teams = [];
+  List<Map<String, dynamic>> _fixtures = [];
 
   Map<String, dynamic> _clubData = {};
-  Map<String, dynamic> _clubDataPlayers = {};
-  Map<String, dynamic> _clubDataResults = {};
 
   bool _generateButtonLoading = false;
-
   bool _errorMessage = false;
 
-  final String baseUrl = 'https://sportal-backend.onrender.com/';
+  // Update this to your Railway URL when deployed
+  final String baseUrl = 'http://localhost:3000/';
 
   final dropdownInputDecoration = InputDecoration(
     contentPadding: const EdgeInsets.all(15),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(10),
       borderSide: const BorderSide(
-        color: Color(0xFFE3E5E5), // Default border color
+        color: Color(0xFFE3E5E5),
         width: 1.4,
       ),
     ),
@@ -71,7 +65,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
     color: Colors.grey.withOpacity(0.5),
     spreadRadius: 1.2,
     blurRadius: 4,
-    offset: const Offset(0, 2), // changes position of shadow
+    offset: const Offset(0, 2),
   );
 
   final RoundedLoadingButtonController _btnController =
@@ -81,30 +75,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
   void initState() {
     super.initState();
     _readClubData(widget.clubData);
-    _fetchPlayerClubData();
-    _fetchResultsClubData();
-  }
-
-  Future<void> _fetchPlayerClubData() async {
-    final response = await http.get(
-        Uri.parse('${baseUrl}get-club-info-player-filter/${widget.email}'));
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _clubDataPlayers = jsonDecode(response.body);
-      });
-    }
-  }
-
-  Future<void> _fetchResultsClubData() async {
-    final response = await http.get(
-        Uri.parse('${baseUrl}get-club-info-results-filter/${widget.email}'));
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _clubDataResults = jsonDecode(response.body);
-      });
-    }
   }
 
   List<Widget> dropdownLabel(String label) {
@@ -116,45 +86,28 @@ class _TemplateScreenState extends State<TemplateScreen> {
           style: TextStyle(color: Colors.grey.shade600),
         ),
       ),
-      const SizedBox(
-        height: 5,
-      ),
+      const SizedBox(height: 5),
     ];
   }
 
-  Future<void> _readClubData(Map<String, dynamic> clubData) async {
+  void _readClubData(Map<String, dynamic> clubData) {
     try {
       setState(() {
         _errorMessage = false;
         _clubData = clubData;
-        _associations = (_clubData['association'] as List)
-            .map((assoc) => assoc['associationName'] as String)
-            .toList();
 
-        if (_associations.isNotEmpty) {
-          _selectedAssociation = _associations.first;
-          _updateCompetitions(_associations.first);
+        // Extract seasons from the new structure
+        if (_clubData['seasons'] != null && _clubData['seasons'].isNotEmpty) {
+          _seasons = List<Map<String, dynamic>>.from(_clubData['seasons']);
+          
+          // Auto-select first season
+          if (_seasons.isNotEmpty) {
+            _selectedSeason = _seasons.first['seasonName'];
+            _updateTeams(_seasons.first['seasonName']);
+          }
         } else {
           _errorMessage = true;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Text(
-                  '$_selectedTemplate not available yet',
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
-                ),
-              ),
-              backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
-              behavior: SnackBarBehavior
-                  .floating, // Optional: to make it float above the bottom
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10), // Rounded corners
-              ),
-            ),
-          );
-
-          _competitions = [];
+          _showSnackBar('No data available for $_selectedTemplate');
           _seasons = [];
           _teams = [];
           _fixtures = [];
@@ -167,125 +120,48 @@ class _TemplateScreenState extends State<TemplateScreen> {
     }
   }
 
-  void _updateCompetitions(String selectedAssociation) {
+  void _updateTeams(String selectedSeason) {
     setState(() {
-      final association = _clubData['association'].firstWhere(
-          (assoc) => assoc['associationName'] == selectedAssociation);
+      final season = _seasons.firstWhere(
+        (s) => s['seasonName'] == selectedSeason,
+        orElse: () => {},
+      );
 
-      _competitions = (association['competitions'] as List)
-          .map((comp) => comp['competitionName'] as String)
-          .toSet() // Use a Set to ensure uniqueness
-          .toList();
+      if (season.isNotEmpty && season['teams'] != null) {
+        _teams = List<Map<String, dynamic>>.from(season['teams']);
+        
+        // Reset selections
+        _selectedTeam = null;
+        _selectedFixture = null;
 
-      // Reset selections to ensure the values are valid
-      _selectedCompetition = null;
-      _selectedSeason = null;
-      _selectedTeam = null;
-      _selectedFixture = null;
-
-      if (_competitions.isNotEmpty) {
-        _selectedCompetition = _competitions.first;
-        _updateSeasons(_competitions.first, selectedAssociation);
+        // Auto-select first team
+        if (_teams.isNotEmpty) {
+          _selectedTeam = _teams.first['teamName'];
+          _updateFixtures(_teams.first['teamName']);
+        }
       }
     });
   }
 
-  void _updateSeasons(String selectedCompetition, String selectedAssociation) {
+  void _updateFixtures(String selectedTeam) {
     setState(() {
-      final association = _clubData['association'].firstWhere(
-          (assoc) => assoc['associationName'] == selectedAssociation);
+      final team = _teams.firstWhere(
+        (t) => t['teamName'] == selectedTeam,
+        orElse: () => {},
+      );
 
-      final competition = (association['competitions'] as List)
-          .firstWhere((comp) => comp['competitionName'] == selectedCompetition);
-
-      _seasons = (competition['seasons'] as List)
-          .map((season) => season['seasonName'] as String)
-          .toSet() // Ensure uniqueness
-          .toList();
-
-      // Reset selections as above
-      _selectedSeason = null;
-      _selectedTeam = null;
-      _selectedFixture = null;
-
-      if (_seasons.isNotEmpty) {
-        _selectedSeason = _seasons.first;
-        _updateTeams(_seasons.first, selectedCompetition, selectedAssociation);
+      if (team.isNotEmpty && team['fixtures'] != null) {
+        _fixtures = List<Map<String, dynamic>>.from(team['fixtures']);
+        
+        // Reset fixture selection
+        _selectedFixture = null;
       }
-    });
-  }
-
-  void _updateTeams(String selectedSeason, String selectedCompetition,
-      String selectedAssociation) {
-    setState(() {
-      final association = _clubData['association'].firstWhere(
-          (assoc) => assoc['associationName'] == selectedAssociation);
-
-      final competition = (association['competitions'] as List)
-          .firstWhere((comp) => comp['competitionName'] == selectedCompetition);
-
-      final season = (competition['seasons'] as List)
-          .firstWhere((season) => season['seasonName'] == selectedSeason);
-
-      _teams = (season['teams'] as List)
-          .map((team) => team['teamName'] as String)
-          .toSet() // Ensure uniqueness
-          .toList();
-
-      // Reset selections
-      _selectedTeam = null;
-      _selectedFixture = null;
-
-      if (_teams.isNotEmpty) {
-        _selectedTeam = _teams.first;
-        _updateFixtures(_teams.first, selectedSeason, selectedCompetition,
-            selectedAssociation);
-      }
-    });
-  }
-
-  void _updateFixtures(String selectedTeam, String selectedSeason,
-      String selectedCompetition, String selectedAssociation) {
-    setState(() {
-      _selectedFixture = null;
-
-      final association = _clubData['association'].firstWhere(
-          (assoc) => assoc['associationName'] == selectedAssociation);
-
-      final competition = (association['competitions'] as List)
-          .firstWhere((comp) => comp['competitionName'] == selectedCompetition);
-
-      final season = (competition['seasons'] as List)
-          .firstWhere((season) => season['seasonName'] == selectedSeason);
-
-      final team = (season['teams'] as List)
-          .firstWhere((team) => team['teamName'] == selectedTeam);
-
-      _fixtures = (team['fixtures'] as List)
-          .map((fixture) => fixture['fixtureName'] as String)
-          .toList();
     });
   }
 
   Future<void> _generateImage() async {
     if (_selectedFixture == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 4.0),
-            child: Text(
-              'Please select the round',
-              style: TextStyle(color: Colors.white, fontSize: 16),
-            ),
-          ),
-          backgroundColor: const Color(0xFF7A5FFF), // Custom purple color
-          behavior: SnackBarBehavior
-              .floating, // Optional: to make it float above the bottom
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10), // Rounded corners
-          ),
-        ),
-      );
+      _showSnackBar('Please select a fixture');
       _btnController.stop();
       return;
     }
@@ -294,54 +170,73 @@ class _TemplateScreenState extends State<TemplateScreen> {
       _generateButtonLoading = true;
     });
 
-    // Use the additional parameters to find the correct fixture
-    final selectedFixture = (_clubData['association'] as List)
-        .expand((assoc) => (assoc['competitions'] as List).expand((comp) =>
-            (comp['seasons'] as List).expand((season) => (season['teams']
-                    as List)
-                .expand((team) => (team['fixtures'] as List).where((fixture) {
-                      // Add additional conditions to uniquely identify the fixture
-                      return fixture['fixtureName'] == _selectedFixture &&
-                          season['seasonName'] == _selectedSeason &&
-                          team['teamName'] == _selectedTeam;
-                    })))))
-        .firstWhere((fixture) =>
-            true); // No need for condition since we've filtered above
+    // Find the selected season to get competition and association info
+    final selectedSeasonData = _seasons.firstWhere(
+      (s) => s['seasonName'] == _selectedSeason,
+      orElse: () => {},
+    );
+
+    // Find the selected team to get club logo
+    final selectedTeamData = _teams.firstWhere(
+      (t) => t['teamName'] == _selectedTeam,
+      orElse: () => {},
+    );
+
+    // Find the selected fixture data
+    final selectedFixtureData = _fixtures.firstWhere(
+      (f) => f['fixtureId'] == _selectedFixture,
+      orElse: () => {},
+    );
+
+    if (selectedFixtureData.isEmpty) {
+      _showSnackBar('Fixture not found');
+      _btnController.stop();
+      return;
+    }
 
     try {
       final templateEndpoints = {
         'Gameday': 'generate-gameday-image',
-        'Lineup': 'generate-players-image',
-        'Match Result': 'generate-result-image',
+        // Add other templates when ready
+        // 'Lineup': 'generate-players-image',
+        // 'Match Result': 'generate-result-image',
       };
 
       final url = '$baseUrl${templateEndpoints[_selectedTemplate]}';
+
+      // Format the fixture name for display
+      final fixtureName = '${selectedFixtureData['homeTeam']} vs ${selectedFixtureData['awayTeam']}';
+      final fixtureDate = selectedFixtureData['date'] ?? '';
+      final fixtureTime = selectedFixtureData['time'] ?? '';
+      final venue = selectedFixtureData['venueName'] ?? '';
+      final venueSurface = selectedFixtureData['venueSurface'] ?? '';
+      
+      final fullVenue = venueSurface.isNotEmpty 
+          ? '$venue / $venueSurface' 
+          : venue;
+
+      // Get competition name and association logo from season data
+      final competitionName = selectedSeasonData['competitionName'] ?? '';
+      final associationLogo = selectedSeasonData['associationLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      
+      // Get team logos from fixture data (now included in response)
+      final homeTeamLogo = selectedFixtureData['homeTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      final awayTeamLogo = selectedFixtureData['awayTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
 
       final response = await http.post(
         Uri.parse(url),
         headers: <String, String>{'Content-Type': 'application/json'},
         body: jsonEncode({
-          'teamA': selectedFixture['teamA'],
-          'teamB': selectedFixture['teamB'],
-          'gameDate': selectedFixture['fixtureDate'],
-          "competitionName": _selectedCompetition ?? "",
-          "teamALogoUrl": selectedFixture['teamALogo'] ??
-              "https://pngfre.com/wp-content/uploads/Cricket-14-1.png", // New parameter
-          "teamBLogoUrl": selectedFixture['teamBLogo'] ??
-              "https://pngfre.com/wp-content/uploads/Cricket-14-1.png", // New parameter
-          "gameFormat":
-              selectedFixture['fixtureFormat'] ?? "One Day", // New parameter
-          "gameVenue": selectedFixture['fixtureVenue'] ?? "",
-          "sponsor1LogoUrl": selectedFixture['sponsor1LogoUrl'] ??
-              "https://pngfre.com/wp-content/uploads/Cricket-14-1.png", // New parameter
-          "associationLogo": (_clubData['association'] as List).firstWhere(
-                  (assoc) => assoc['associationName'] == _selectedAssociation)[
-              'associationLogo'],
-          "userEmail": widget.email,
-          "playerList": selectedFixture['playerList'],
-          "fixtureName": selectedFixture['fixtureName'],
-          "finalScores": selectedFixture['finalScores'],
-          
+          'teamA': selectedFixtureData['homeTeam'] ?? '',
+          'teamB': selectedFixtureData['awayTeam'] ?? '',
+          'gameDate': '$fixtureDate ${fixtureTime}',
+          'competitionName': competitionName,
+          'teamALogoUrl': homeTeamLogo,
+          'teamBLogoUrl': awayTeamLogo,
+          'gameFormat': selectedFixtureData['roundName'] ?? '',
+          'gameVenue': fullVenue,
+          'associationLogo': associationLogo,
+          'userEmail': widget.email,
         }),
       );
 
@@ -358,16 +253,14 @@ class _TemplateScreenState extends State<TemplateScreen> {
               onRedesign: () {
                 Navigator.of(context).pop();
               },
-              imageName: _selectedTemplate +
-                  "-" +
-                  _selectedTeam! +
-                  "-" +
-                  _selectedFixture! +
-                  ".png",
+              imageName: '$_selectedTemplate-${_selectedTeam ?? 'team'}-${selectedFixtureData['roundName'] ?? 'fixture'}.png',
             );
           },
         );
-      } else {}
+      } else {
+        _showSnackBar('Failed to generate image');
+      }
+      
       setState(() {
         _generateButtonLoading = false;
       });
@@ -377,16 +270,31 @@ class _TemplateScreenState extends State<TemplateScreen> {
         _generateButtonLoading = false;
       });
       _btnController.stop();
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      _showSnackBar('Error: $e');
     }
   }
 
-  void _showErrorMessage(String message) {
-    MediaQuery.paddingOf(context).top;
+  void _showSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0),
+          child: Text(
+            message,
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+          ),
+        ),
+        backgroundColor: const Color(0xFF7A5FFF),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(10),
+        ),
+      ),
     );
+  }
+
+  void _showErrorMessage(String message) {
+    _showSnackBar(message);
   }
 
   @override
@@ -410,16 +318,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
                 ),
               ),
               child: Row(
-                mainAxisAlignment:
-                    MainAxisAlignment.spaceBetween, // Align items horizontally
-                crossAxisAlignment:
-                    CrossAxisAlignment.center, // Align items vertically
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Column(
-                    mainAxisAlignment:
-                        MainAxisAlignment.center, // Center text vertically
-                    crossAxisAlignment:
-                        CrossAxisAlignment.start, // Align text to the left
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         'Hello',
@@ -439,12 +343,16 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       ),
                     ],
                   ),
-                  CircleAvatar(
-                    radius: 30.0,
-                    backgroundImage: NetworkImage(
-                      _clubLogo ?? '', // Replace with the actual image URL
+                  if (_clubLogo != null)
+                    CircleAvatar(
+                      radius: 30.0,
+                      backgroundImage: NetworkImage(_clubLogo!),
+                    )
+                  else
+                    const CircleAvatar(
+                      radius: 30.0,
+                      child: Icon(Icons.sports, size: 30),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -452,6 +360,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
               padding: const EdgeInsets.all(16.0),
               child: Column(
                 children: [
+                  // Template Dropdown (currently only Gameday works)
                   ...dropdownLabel("Template"),
                   Container(
                     decoration: BoxDecoration(
@@ -461,65 +370,21 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     child: DropdownButtonFormField<String>(
                       dropdownColor: Colors.white,
                       value: _selectedTemplate,
-                      items: ['Gameday', 'Lineup', 'Match Result']
+                      items: ['Gameday'] // Only Gameday for now
                           .map((template) => DropdownMenuItem(
                               value: template, child: Text(template)))
                           .toList(),
-                      onChanged: (newValue) => _updateTemplate(newValue),
-                      decoration: dropdownInputDecoration,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  ...dropdownLabel("Association"),
-                  Container(
-                    decoration: BoxDecoration(
-                        boxShadow: [dropdownBoxShadow],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: DropdownButtonFormField<String>(
-                      dropdownColor: Colors.white,
-                      isExpanded: true,
-                      value: _selectedAssociation,
-                      items: _associations
-                          .map((association) => DropdownMenuItem(
-                              value: association, child: Text(association)))
-                          .toList(),
                       onChanged: (newValue) {
                         setState(() {
-                          _selectedAssociation = newValue!;
-                          _updateCompetitions(newValue);
+                          _selectedTemplate = newValue ?? 'Gameday';
                         });
                       },
                       decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  ...dropdownLabel("Competition"),
-                  Container(
-                    decoration: BoxDecoration(
-                        boxShadow: [dropdownBoxShadow],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: DropdownButtonFormField<String>(
-                      dropdownColor: Colors.white,
-                      isExpanded: true,
-                      value: _selectedCompetition,
-                      items: _competitions
-                          .map((competition) => DropdownMenuItem(
-                                value: competition,
-                                child: Text(competition),
-                              ))
-                          .toList(),
-                      onChanged: (newValue) {
-                        setState(() {
-                          _selectedCompetition = newValue!;
-                          _updateSeasons(newValue, _selectedAssociation!);
-                        });
-                      },
-                      decoration: dropdownInputDecoration,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+
+                  // Season Dropdown
                   ...dropdownLabel("Season"),
                   Container(
                     decoration: BoxDecoration(
@@ -532,23 +397,24 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedSeason,
                       items: _seasons
-                          .map((season) => DropdownMenuItem(
-                                value: season,
-                                child: Text(season),
+                          .map<DropdownMenuItem<String>>((season) => DropdownMenuItem<String>(
+                                value: season['seasonName'] as String,
+                                child: Text(season['seasonName'] as String),
                               ))
                           .toList(),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedSeason = newValue!;
-                          _updateTeams(newValue, _selectedCompetition!,
-                              _selectedAssociation!);
+                          _updateTeams(newValue);
                         });
                       },
                       decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  ...dropdownLabel("Grade"),
+
+                  // Team Dropdown
+                  ...dropdownLabel("Team"),
                   Container(
                     decoration: BoxDecoration(
                         boxShadow: [dropdownBoxShadow],
@@ -559,21 +425,23 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedTeam,
                       items: _teams
-                          .map((team) =>
-                              DropdownMenuItem(value: team, child: Text(team)))
+                          .map<DropdownMenuItem<String>>((team) => DropdownMenuItem<String>(
+                              value: team['teamName'] as String,
+                              child: Text(team['teamName'] as String)))
                           .toList(),
                       onChanged: (newValue) {
                         setState(() {
                           _selectedTeam = newValue!;
-                          _updateFixtures(newValue, _selectedSeason!,
-                              _selectedCompetition!, _selectedAssociation!);
+                          _updateFixtures(newValue);
                         });
                       },
                       decoration: dropdownInputDecoration,
                     ),
                   ),
                   const SizedBox(height: 10),
-                  ...dropdownLabel("Round"),
+
+                  // Fixture Dropdown
+                  ...dropdownLabel("Fixture"),
                   Container(
                     decoration: BoxDecoration(
                         boxShadow: [dropdownBoxShadow],
@@ -584,8 +452,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedFixture,
                       items: _fixtures
-                          .map((fixture) => DropdownMenuItem(
-                              value: fixture, child: Text(fixture)))
+                          .map<DropdownMenuItem<String>>((fixture) => DropdownMenuItem<String>(
+                                value: fixture['fixtureId'] as String,
+                                child: Text(
+                                  '${fixture['roundAbbr'] ?? fixture['roundName']}: ${fixture['homeTeam']} vs ${fixture['awayTeam']}',
+                                ),
+                              ))
                           .toList(),
                       onChanged: (newValue) => setState(() {
                         _selectedFixture = newValue!;
@@ -594,6 +466,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     ),
                   ),
                   const SizedBox(height: 25),
+
+                  // Generate Button
                   RoundedLoadingButton(
                       controller: _btnController,
                       color: _errorMessage
@@ -611,27 +485,5 @@ class _TemplateScreenState extends State<TemplateScreen> {
         ),
       ),
     );
-  }
-
-  _updateTemplate(String? newValue) {
-    setState(() {
-      if (newValue == 'Gameday') {
-        _clubData = widget.clubData;
-      } else if (newValue == 'Lineup') {
-        _clubData = _clubDataPlayers;
-      } else if (newValue == 'Match Result') {
-        _clubData = _clubDataResults;
-      }
-
-      _selectedTemplate = newValue ?? 'Gameday';
-
-      _selectedAssociation = null;
-      _selectedCompetition = null;
-      _selectedSeason = null;
-      _selectedTeam = null;
-      _selectedFixture = null;
-
-      _readClubData(_clubData);
-    });
   }
 }

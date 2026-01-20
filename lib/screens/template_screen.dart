@@ -34,7 +34,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
   bool _errorMessage = false;
 
   // Update this to your Railway URL when deployed
-  final String baseUrl = 'http://localhost:3000/';
+  final String baseUrl = 'https://sportal-backend-production.up.railway.app/';
 
   final dropdownInputDecoration = InputDecoration(
     contentPadding: const EdgeInsets.all(15),

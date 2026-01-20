@@ -24,13 +24,30 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         color: const Color.fromRGBO(60, 17, 185, 1),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center, // Centers the content vertically
-            children: [
-              Image.asset('assets/images/splash.png'), // Display your image
-            ],
-          ),
+        child: Stack(
+          children: [
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Image.asset('assets/images/splash.png'),
+                ],
+              ),
+            ),
+            // Version number in bottom right corner
+            const Positioned(
+              bottom: 20,
+              right: 20,
+              child: Text(
+                '1.0.5+1', // ← Update this each deployment
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

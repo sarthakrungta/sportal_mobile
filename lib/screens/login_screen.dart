@@ -32,7 +32,8 @@ Future<void> _fetchClubData(String email) async {
 
   try {
     final response = await http.get(
-      Uri.parse('https://sportal-backend-production.up.railway.app/api/org-data?userEmail=$email')
+    Uri.parse('https://sportal-backend-production.up.railway.app/api/org-data?userEmail=$email')
+//      Uri.parse('http://localhost:3000/api/org-data?userEmail=$email')
     );
 
     if (response.statusCode == 200) {

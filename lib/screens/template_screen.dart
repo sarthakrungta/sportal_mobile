@@ -34,7 +34,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
   bool _errorMessage = false;
 
   // Update this to your Railway URL when deployed
-  final String baseUrl = 'https://sportal-backend-production.up.railway.app/';
+  final String baseUrl = 'https://sportal-backend-production.up.railway.app/'; 
+  // final String baseUrl = 'http://localhost:3000/'; // For local testing
 
   final dropdownInputDecoration = InputDecoration(
     contentPadding: const EdgeInsets.all(15),
@@ -197,8 +198,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
     try {
       final templateEndpoints = {
         'Gameday': 'generate-gameday-image',
+        'Lineup': 'generate-starting-xi-image',
         // Add other templates when ready
-        // 'Lineup': 'generate-players-image',
         // 'Match Result': 'generate-result-image',
       };
 
@@ -223,10 +224,23 @@ class _TemplateScreenState extends State<TemplateScreen> {
       final homeTeamLogo = selectedFixtureData['homeTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
       final awayTeamLogo = selectedFixtureData['awayTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
 
-      final response = await http.post(
-        Uri.parse(url),
-        headers: <String, String>{'Content-Type': 'application/json'},
-        body: jsonEncode({
+      // Build request body based on template type
+      Map<String, dynamic> requestBody;
+      
+      if (_selectedTemplate == 'Lineup') {
+        requestBody = {
+          'teamA': selectedFixtureData['homeTeam'] ?? '',
+          'teamB': selectedFixtureData['awayTeam'] ?? '',
+          'competitionName': competitionName,
+          'teamALogoUrl': homeTeamLogo,
+          'teamBLogoUrl': awayTeamLogo,
+          'gameFormat': selectedFixtureData['roundName'] ?? '',
+          'fixtureId': selectedFixtureData['fixtureId'],
+          'userEmail': widget.email,
+        };
+      } else {
+        // Gameday template
+        requestBody = {
           'teamA': selectedFixtureData['homeTeam'] ?? '',
           'teamB': selectedFixtureData['awayTeam'] ?? '',
           'gameDate': '$fixtureDate ${fixtureTime}',
@@ -237,7 +251,13 @@ class _TemplateScreenState extends State<TemplateScreen> {
           'gameVenue': fullVenue,
           'associationLogo': associationLogo,
           'userEmail': widget.email,
-        }),
+        };
+      }
+
+      final response = await http.post(
+        Uri.parse(url),
+        headers: <String, String>{'Content-Type': 'application/json'},
+        body: jsonEncode(requestBody),
       );
 
       if (response.statusCode == 200) {
@@ -370,7 +390,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     child: DropdownButtonFormField<String>(
                       dropdownColor: Colors.white,
                       value: _selectedTemplate,
-                      items: ['Gameday'] // Only Gameday for now
+                      items: ['Gameday', 'Lineup'] // Added Starting XI
                           .map((template) => DropdownMenuItem(
                               value: template, child: Text(template)))
                           .toList(),

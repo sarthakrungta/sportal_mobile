@@ -14,8 +14,8 @@ class _SplashScreenState extends State<SplashScreen> {
   void initState() {
     super.initState();
     Timer(const Duration(seconds: 3), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-          builder: (context) => LoginScreen()));
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => LoginScreen()));
     });
   }
 
@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
               bottom: 20,
               right: 20,
               child: Text(
-                '1.0.5+4', // ← Update this each deployment
+                '1.0.5+5', // ← Update this each deployment
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 14,

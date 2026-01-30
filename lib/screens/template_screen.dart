@@ -161,10 +161,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
   }
 
   Future<void> _generateImage() async {
-    if (_selectedFixture == null) {
-      _showSnackBar('Please select a fixture');
-      _btnController.stop();
-      return;
+    if (_selectedTemplate != 'Ladder') {
+      if (_selectedFixture == null) {
+        _showSnackBar('Please select a fixture');
+        _btnController.stop();
+        return;
+      }
     }
 
     setState(() {
@@ -186,17 +188,19 @@ class _TemplateScreenState extends State<TemplateScreen> {
     print(selectedTeamData);
 
     // Find the selected fixture data
-    final selectedFixtureData = _fixtures.firstWhere(
-      (f) => f['fixtureId'] == _selectedFixture,
-      orElse: () => {},
-    );
+    // Find the selected fixture data
+    Map<String, dynamic> selectedFixtureData = {};
+    if (_selectedTemplate != 'Ladder') {
+      selectedFixtureData = _fixtures.firstWhere(
+        (f) => f['fixtureId'] == _selectedFixture,
+        orElse: () => {},
+      );
 
-    print(selectedFixtureData);
-
-    if (selectedFixtureData.isEmpty) {
-      _showSnackBar('Fixture not found');
-      _btnController.stop();
-      return;
+      if (selectedFixtureData.isEmpty) {
+        _showSnackBar('Fixture not found');
+        _btnController.stop();
+        return;
+      }
     }
 
     try {
@@ -204,33 +208,36 @@ class _TemplateScreenState extends State<TemplateScreen> {
         'Gameday': 'generate-gameday-image',
         'Lineup': 'generate-starting-xi-image',
         'Ladder': 'generate-ladder-image',
-        // Add other templates when ready
-        // 'Match Result': 'generate-result-image',
       };
 
       final url = '$baseUrl${templateEndpoints[_selectedTemplate]}';
 
-      // Format the fixture name for display
-      final fixtureName =
-          '${selectedFixtureData['homeTeam']} vs ${selectedFixtureData['awayTeam']}';
-      final fixtureDate = selectedFixtureData['date'] ?? '';
-      final fixtureTime = selectedFixtureData['time'] ?? '';
-      final venue = selectedFixtureData['venueName'] ?? '';
-      final venueSurface = selectedFixtureData['venueSurface'] ?? '';
-
-      final fullVenue =
-          venueSurface.isNotEmpty ? '$venue / $venueSurface' : venue;
-
-      // Get competition name and association logo from season data
-      final competitionName = selectedSeasonData['competitionName'] ?? '';
-      final associationLogo = selectedSeasonData['associationLogo'] ??
+      // Variables for non-Ladder templates
+      String fixtureName = '';
+      String fullVenue = '';
+      String competitionName = selectedSeasonData['competitionName'] ?? '';
+      String associationLogo = selectedSeasonData['associationLogo'] ??
           'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      String homeTeamLogo = '';
+      String awayTeamLogo = '';
+      String fixtureDate = '';
+      String fixtureTime = '';
 
-      // Get team logos from fixture data (now included in response)
-      final homeTeamLogo = selectedFixtureData['homeTeamLogo'] ??
-          'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
-      final awayTeamLogo = selectedFixtureData['awayTeamLogo'] ??
-          'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      if (_selectedTemplate != 'Ladder') {
+        fixtureName =
+            '${selectedFixtureData['homeTeam']} vs ${selectedFixtureData['awayTeam']}';
+        fixtureDate = selectedFixtureData['date'] ?? '';
+        fixtureTime = selectedFixtureData['time'] ?? '';
+        final venue = selectedFixtureData['venueName'] ?? '';
+        final venueSurface = selectedFixtureData['venueSurface'] ?? '';
+
+        fullVenue = venueSurface.isNotEmpty ? '$venue / $venueSurface' : venue;
+
+        homeTeamLogo = selectedFixtureData['homeTeamLogo'] ??
+            'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+        awayTeamLogo = selectedFixtureData['awayTeamLogo'] ??
+            'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      }
 
       // Build request body based on template type
       Map<String, dynamic> requestBody;
@@ -286,7 +293,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
                 Navigator.of(context).pop();
               },
               imageName:
-                  '$_selectedTemplate-${_selectedTeam ?? 'team'}-${selectedFixtureData['roundName'] ?? 'fixture'}.png',
+                  '$_selectedTemplate-${_selectedTeam ?? 'team'}-${_selectedTemplate == 'Ladder' ? 'ladder' : (selectedFixtureData['roundName'] ?? 'fixture')}.png',
             );
           },
         );
@@ -480,31 +487,33 @@ class _TemplateScreenState extends State<TemplateScreen> {
                   const SizedBox(height: 10),
 
                   // Fixture Dropdown
-                  ...dropdownLabel("Fixture"),
-                  Container(
-                    decoration: BoxDecoration(
-                        boxShadow: [dropdownBoxShadow],
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: DropdownButtonFormField<String>(
-                      dropdownColor: Colors.white,
-                      isExpanded: true,
-                      value: _selectedFixture,
-                      items: _fixtures
-                          .map<DropdownMenuItem<String>>(
-                              (fixture) => DropdownMenuItem<String>(
-                                    value: fixture['fixtureId'] as String,
-                                    child: Text(
-                                      '${fixture['roundAbbr'] ?? fixture['roundName']}: ${fixture['homeTeam']} vs ${fixture['awayTeam']}',
-                                    ),
-                                  ))
-                          .toList(),
-                      onChanged: (newValue) => setState(() {
-                        _selectedFixture = newValue!;
-                      }),
-                      decoration: dropdownInputDecoration,
+                  if (_selectedTemplate != 'Ladder') ...[
+                    ...dropdownLabel("Fixture"),
+                    Container(
+                      decoration: BoxDecoration(
+                          boxShadow: [dropdownBoxShadow],
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: DropdownButtonFormField<String>(
+                        dropdownColor: Colors.white,
+                        isExpanded: true,
+                        value: _selectedFixture,
+                        items: _fixtures
+                            .map<DropdownMenuItem<String>>(
+                                (fixture) => DropdownMenuItem<String>(
+                                      value: fixture['fixtureId'] as String,
+                                      child: Text(
+                                        '${fixture['roundAbbr'] ?? fixture['roundName']}: ${fixture['homeTeam']} vs ${fixture['awayTeam']}',
+                                      ),
+                                    ))
+                            .toList(),
+                        onChanged: (newValue) => setState(() {
+                          _selectedFixture = newValue!;
+                        }),
+                        decoration: dropdownInputDecoration,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 25),
 
                   // Generate Button

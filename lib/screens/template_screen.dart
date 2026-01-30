@@ -34,8 +34,8 @@ class _TemplateScreenState extends State<TemplateScreen> {
   bool _errorMessage = false;
 
   // Update this to your Railway URL when deployed
-  final String baseUrl = 'https://sportal-backend-production.up.railway.app/'; 
-  // final String baseUrl = 'http://localhost:3000/'; // For local testing
+  //final String baseUrl = 'https://sportal-backend-production.up.railway.app/';
+  final String baseUrl = 'http://localhost:3000/'; // For local testing
 
   final dropdownInputDecoration = InputDecoration(
     contentPadding: const EdgeInsets.all(15),
@@ -100,7 +100,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
         // Extract seasons from the new structure
         if (_clubData['seasons'] != null && _clubData['seasons'].isNotEmpty) {
           _seasons = List<Map<String, dynamic>>.from(_clubData['seasons']);
-          
+
           // Auto-select first season
           if (_seasons.isNotEmpty) {
             _selectedSeason = _seasons.first['seasonName'];
@@ -130,7 +130,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
       if (season.isNotEmpty && season['teams'] != null) {
         _teams = List<Map<String, dynamic>>.from(season['teams']);
-        
+
         // Reset selections
         _selectedTeam = null;
         _selectedFixture = null;
@@ -153,7 +153,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
 
       if (team.isNotEmpty && team['fixtures'] != null) {
         _fixtures = List<Map<String, dynamic>>.from(team['fixtures']);
-        
+
         // Reset fixture selection
         _selectedFixture = null;
       }
@@ -183,11 +183,15 @@ class _TemplateScreenState extends State<TemplateScreen> {
       orElse: () => {},
     );
 
+    print(selectedTeamData);
+
     // Find the selected fixture data
     final selectedFixtureData = _fixtures.firstWhere(
       (f) => f['fixtureId'] == _selectedFixture,
       orElse: () => {},
     );
+
+    print(selectedFixtureData);
 
     if (selectedFixtureData.isEmpty) {
       _showSnackBar('Fixture not found');
@@ -199,6 +203,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
       final templateEndpoints = {
         'Gameday': 'generate-gameday-image',
         'Lineup': 'generate-starting-xi-image',
+        'Ladder': 'generate-ladder-image',
         // Add other templates when ready
         // 'Match Result': 'generate-result-image',
       };
@@ -206,27 +211,30 @@ class _TemplateScreenState extends State<TemplateScreen> {
       final url = '$baseUrl${templateEndpoints[_selectedTemplate]}';
 
       // Format the fixture name for display
-      final fixtureName = '${selectedFixtureData['homeTeam']} vs ${selectedFixtureData['awayTeam']}';
+      final fixtureName =
+          '${selectedFixtureData['homeTeam']} vs ${selectedFixtureData['awayTeam']}';
       final fixtureDate = selectedFixtureData['date'] ?? '';
       final fixtureTime = selectedFixtureData['time'] ?? '';
       final venue = selectedFixtureData['venueName'] ?? '';
       final venueSurface = selectedFixtureData['venueSurface'] ?? '';
-      
-      final fullVenue = venueSurface.isNotEmpty 
-          ? '$venue / $venueSurface' 
-          : venue;
+
+      final fullVenue =
+          venueSurface.isNotEmpty ? '$venue / $venueSurface' : venue;
 
       // Get competition name and association logo from season data
       final competitionName = selectedSeasonData['competitionName'] ?? '';
-      final associationLogo = selectedSeasonData['associationLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
-      
+      final associationLogo = selectedSeasonData['associationLogo'] ??
+          'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+
       // Get team logos from fixture data (now included in response)
-      final homeTeamLogo = selectedFixtureData['homeTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
-      final awayTeamLogo = selectedFixtureData['awayTeamLogo'] ?? 'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      final homeTeamLogo = selectedFixtureData['homeTeamLogo'] ??
+          'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
+      final awayTeamLogo = selectedFixtureData['awayTeamLogo'] ??
+          'https://pngfre.com/wp-content/uploads/Cricket-14-1.png';
 
       // Build request body based on template type
       Map<String, dynamic> requestBody;
-      
+
       if (_selectedTemplate == 'Lineup') {
         requestBody = {
           'teamA': selectedFixtureData['homeTeam'] ?? '',
@@ -238,8 +246,12 @@ class _TemplateScreenState extends State<TemplateScreen> {
           'fixtureId': selectedFixtureData['fixtureId'],
           'userEmail': widget.email,
         };
+      } else if (_selectedTemplate == 'Ladder') {
+        requestBody = {
+          'teamId': selectedTeamData['teamId'] ?? '',
+          'userEmail': widget.email,
+        };
       } else {
-        // Gameday template
         requestBody = {
           'teamA': selectedFixtureData['homeTeam'] ?? '',
           'teamB': selectedFixtureData['awayTeam'] ?? '',
@@ -273,14 +285,15 @@ class _TemplateScreenState extends State<TemplateScreen> {
               onRedesign: () {
                 Navigator.of(context).pop();
               },
-              imageName: '$_selectedTemplate-${_selectedTeam ?? 'team'}-${selectedFixtureData['roundName'] ?? 'fixture'}.png',
+              imageName:
+                  '$_selectedTemplate-${_selectedTeam ?? 'team'}-${selectedFixtureData['roundName'] ?? 'fixture'}.png',
             );
           },
         );
       } else {
         _showSnackBar('Failed to generate image');
       }
-      
+
       setState(() {
         _generateButtonLoading = false;
       });
@@ -390,7 +403,11 @@ class _TemplateScreenState extends State<TemplateScreen> {
                     child: DropdownButtonFormField<String>(
                       dropdownColor: Colors.white,
                       value: _selectedTemplate,
-                      items: ['Gameday', 'Lineup'] // Added Starting XI
+                      items: [
+                        'Gameday',
+                        'Lineup',
+                        'Ladder'
+                      ] // Added Starting XI
                           .map((template) => DropdownMenuItem(
                               value: template, child: Text(template)))
                           .toList(),
@@ -417,10 +434,11 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedSeason,
                       items: _seasons
-                          .map<DropdownMenuItem<String>>((season) => DropdownMenuItem<String>(
-                                value: season['seasonName'] as String,
-                                child: Text(season['seasonName'] as String),
-                              ))
+                          .map<DropdownMenuItem<String>>(
+                              (season) => DropdownMenuItem<String>(
+                                    value: season['seasonName'] as String,
+                                    child: Text(season['seasonName'] as String),
+                                  ))
                           .toList(),
                       onChanged: (newValue) {
                         setState(() {
@@ -445,9 +463,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedTeam,
                       items: _teams
-                          .map<DropdownMenuItem<String>>((team) => DropdownMenuItem<String>(
-                              value: team['teamName'] as String,
-                              child: Text(team['teamName'] as String)))
+                          .map<DropdownMenuItem<String>>((team) =>
+                              DropdownMenuItem<String>(
+                                  value: team['teamName'] as String,
+                                  child: Text(team['teamName'] as String)))
                           .toList(),
                       onChanged: (newValue) {
                         setState(() {
@@ -472,12 +491,13 @@ class _TemplateScreenState extends State<TemplateScreen> {
                       isExpanded: true,
                       value: _selectedFixture,
                       items: _fixtures
-                          .map<DropdownMenuItem<String>>((fixture) => DropdownMenuItem<String>(
-                                value: fixture['fixtureId'] as String,
-                                child: Text(
-                                  '${fixture['roundAbbr'] ?? fixture['roundName']}: ${fixture['homeTeam']} vs ${fixture['awayTeam']}',
-                                ),
-                              ))
+                          .map<DropdownMenuItem<String>>(
+                              (fixture) => DropdownMenuItem<String>(
+                                    value: fixture['fixtureId'] as String,
+                                    child: Text(
+                                      '${fixture['roundAbbr'] ?? fixture['roundName']}: ${fixture['homeTeam']} vs ${fixture['awayTeam']}',
+                                    ),
+                                  ))
                           .toList(),
                       onChanged: (newValue) => setState(() {
                         _selectedFixture = newValue!;

@@ -25,42 +25,41 @@ class _LoginScreenState extends State<LoginScreen> {
   final RoundedLoadingButtonController _btnController =
       RoundedLoadingButtonController();
 
-Future<void> _fetchClubData(String email) async {
-  setState(() {
-    _isLoading = true;
-  });
-
-  try {
-    final response = await http.get(
-    Uri.parse('https://sportal-backend-production.up.railway.app/api/org-data?userEmail=$email')
-//      Uri.parse('http://localhost:3000/api/org-data?userEmail=$email')
-    );
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _clubData = jsonDecode(response.body);
-      });
-      _saveEmail();
-      Navigator.pushNamed(
-        context,
-        '/template',
-        arguments: {
-          'email': email,
-          'clubData': _clubData,
-        },
-      );
-    } else {
-      setState(() {
-        _loginFail = true;
-      });
-    }
-  } finally {
+  Future<void> _fetchClubData(String email) async {
     setState(() {
-      _isLoading = false;
+      _isLoading = true;
     });
-    _btnController.stop();
+
+    try {
+      final response = await http.get(
+          //Uri.parse('https://sportal-backend-production.up.railway.app/api/org-data?userEmail=$email')
+          Uri.parse('http://localhost:3000/api/org-data?userEmail=$email'));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _clubData = jsonDecode(response.body);
+        });
+        _saveEmail();
+        Navigator.pushNamed(
+          context,
+          '/template',
+          arguments: {
+            'email': email,
+            'clubData': _clubData,
+          },
+        );
+      } else {
+        setState(() {
+          _loginFail = true;
+        });
+      }
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+      _btnController.stop();
+    }
   }
-}
 
   Future<void> _checkLoginStatus() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();

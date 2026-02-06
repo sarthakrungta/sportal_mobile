@@ -185,9 +185,6 @@ class _TemplateScreenState extends State<TemplateScreen> {
       orElse: () => {},
     );
 
-    print(selectedTeamData);
-
-    // Find the selected fixture data
     // Find the selected fixture data
     Map<String, dynamic> selectedFixtureData = {};
     if (_selectedTemplate != 'Ladder') {
@@ -252,6 +249,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
           'gameFormat': selectedFixtureData['roundName'] ?? '',
           'fixtureId': selectedFixtureData['fixtureId'],
           'userEmail': widget.email,
+          'teamId': selectedTeamData['teamId'] ?? '',
         };
       } else if (_selectedTemplate == 'Ladder') {
         requestBody = {
@@ -297,8 +295,10 @@ class _TemplateScreenState extends State<TemplateScreen> {
             );
           },
         );
+      } else if (response.statusCode == 422) {
+        _showSnackBar(_getErrorMessage(response));
       } else {
-        _showSnackBar('Failed to generate image');
+        _showSnackBar('Server error. Please try again.');
       }
 
       setState(() {
@@ -311,6 +311,21 @@ class _TemplateScreenState extends State<TemplateScreen> {
       });
       _btnController.stop();
       _showSnackBar('Error: $e');
+    }
+  }
+
+  String _getErrorMessage(http.Response response) {
+    try {
+      final body = jsonDecode(response.body);
+
+      switch (body['errorCode']) {
+        case 'NO_PLAYERS_FOUND':
+          return 'Starting XI not available yet. Try again later.';
+        default:
+          return body['message'] ?? 'Failed to generate image';
+      }
+    } catch (_) {
+      return 'Failed to generate image';
     }
   }
 

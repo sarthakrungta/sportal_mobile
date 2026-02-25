@@ -114,7 +114,7 @@ class _TemplateScreenState extends State<TemplateScreen> {
           _fixtures = [];
         }
 
-        _clubLogo = _clubData['clubLogo'];
+        _clubLogo = _clubData['seasons'][0]['teams'][0]['clubLogo'];
       });
     } catch (e) {
       _showErrorMessage('An error occurred: $e');

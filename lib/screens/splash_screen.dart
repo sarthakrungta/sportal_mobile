@@ -39,7 +39,7 @@ class _SplashScreenState extends State<SplashScreen> {
               bottom: 20,
               right: 20,
               child: Text(
-                '1.0.5+7', // ← Update this each deployment
+                '1.0.5+8', // ← Update this each deployment
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 14,
